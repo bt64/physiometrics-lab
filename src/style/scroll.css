@@ -1,0 +1,14 @@
+.scroll {
+  position: absolute;
+  transition: background-color 100ms;
+  background-color: #ddd;
+
+  &:hover {
+    background-color: #ccc;
+  }
+}
+
+.scroll.h {
+  top: 0;
+  height: 14px;
+}

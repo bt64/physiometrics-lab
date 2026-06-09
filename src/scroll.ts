@@ -21,7 +21,7 @@ let scrollDragStartRight = 0;
 let scrollLeft = border.left;
 let scrollRight = border.right;
 
-const reset = () => {
+export const reset = () => {
   width = window.innerWidth - border.left - border.right;
   scrollLeft = border.left;
   scrollRight = border.right;
@@ -67,27 +67,16 @@ window.addEventListener("pointermove", (e) => {
   }
 
   if (scrollDrag) {
-    const delta = e.x - scrollDragStart;
+    let delta = e.x - scrollDragStart;
 
-    let newLeft = clamp(
-      scrollDragStartLeft + delta,
-      border.left,
-      width + border.left - scrollRight - minWidth,
-    );
-
-    let newRight = clamp(
-      scrollDragStartRight - delta,
-      border.right,
-      width + border.right - scrollLeft - minWidth,
-    );
-
-    if (
-      (delta < 0 && newLeft !== border.left) ||
-      (delta > 0 && newRight !== border.right)
-    ) {
-      scrollLeft = newLeft;
-      scrollRight = newRight;
+    if (scrollDragStartLeft + delta < border.left) {
+      delta = border.left - scrollDragStartLeft;
+    } else if (scrollDragStartRight - delta < border.right) {
+      delta = scrollDragStartRight - border.right;
     }
+
+    scrollLeft = scrollDragStartLeft + delta;
+    scrollRight = scrollDragStartRight - delta;
 
     scrollh.style.left = scrollLeft + "px";
     scrollh.style.right = scrollRight + "px";
@@ -131,25 +120,14 @@ window.addEventListener("wheel", (e) => {
 
   delta *= width / (window.innerWidth * 5);
 
-  let newLeft = clamp(
-    scrollLeft + delta,
-    border.left,
-    width + border.left - scrollRight - minWidth,
-  );
-
-  let newRight = clamp(
-    scrollRight - delta,
-    border.right,
-    width + border.right - scrollLeft - minWidth,
-  );
-
-  if (
-    (delta < 0 && newLeft !== border.left) ||
-    (delta > 0 && newRight !== border.right)
-  ) {
-    scrollLeft = newLeft;
-    scrollRight = newRight;
+  if (scrollLeft + delta < border.left) {
+    delta = border.left - scrollLeft;
+  } else if (scrollRight - delta < border.right) {
+    delta = scrollRight - border.right;
   }
+
+  scrollLeft = scrollLeft + delta;
+  scrollRight = scrollRight - delta;
 
   scrollh.style.left = scrollLeft + "px";
   scrollh.style.right = scrollRight + "px";

@@ -1,5 +1,5 @@
 {
-  "name": "anz",
+  "name": "physiometrics-lab",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,11 +10,11 @@
   },
   "devDependencies": {
     "typescript": "~6.0.3",
-    "vite": "^8.0.10",
+    "vite": "^8.0.16",
     "vite-plugin-singlefile": "^2.3.3"
   },
   "dependencies": {
-    "@fontsource-variable/roboto-mono": "^5.2.8",
+    "@fontsource-variable/roboto-mono": "^5.2.9",
     "mat-for-js": "^1.1.0"
   }
 }
