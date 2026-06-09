@@ -29,35 +29,6 @@ const drawZeroLine = (w: number) => {
   svg.appendChild(line);
 };
 
-// const drawBorder = (w: number, h: number) => {
-//   const polyline = document.createElementNS(
-//     "http://www.w3.org/2000/svg",
-//     "polyline",
-//   );
-
-//   polyline.setAttribute("fill", "none");
-//   polyline.setAttribute("stroke", "#bbb");
-//   polyline.setAttribute("stroke-width", "2.4");
-//   polyline.setAttribute("stroke-linejoin", "round");
-//   polyline.setAttribute("vector-effect", "non-scaling-stroke");
-
-//   const points = [
-//     { x: 0, y: -h / 2 },
-//     { x: 0, y: h / 2 },
-//     { x: w, y: h / 2 },
-//   ];
-
-//   for (const p of points) {
-//     const point = svg.createSVGPoint();
-//     point.x = p.x;
-//     point.y = p.y;
-
-//     polyline.points.appendItem(point);
-//   }
-
-//   svg.appendChild(polyline);
-// };
-
 const drawSignalGraph = (points: Point[]) => {
   const polyline = document.createElementNS(
     "http://www.w3.org/2000/svg",
@@ -129,12 +100,11 @@ export const draw = (data: Data) => {
   svg.viewBox.baseVal.width = baseW;
   svg.viewBox.baseVal.height = absMax * 2;
 
-  // drawBorder(baseW, absMax * 2);
-
   // need to wait for the next tick to get the correct container size
   Promise.resolve().then(() => {
     drawAxisLabels();
     drawZeroLine(baseW);
     drawSignalGraph(points);
+    setScale(1, 0);
   });
 };
