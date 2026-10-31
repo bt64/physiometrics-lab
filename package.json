@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun ./index.html --watch",
-    "build": "bun build --compile --target=browser ./index.html --outdir=dist"
+    "build": "bun build --compile --target=browser ./index.html --outdir=dist --minify"
   },
   "devDependencies": {
     "typescript": "~7.0.2"
