@@ -28,7 +28,6 @@ export class Data {
   public frameCount = 0;
 
   /**
-   * @param file The .anz file to read the data from.
    * @param frame The frame number to read (0-based). Only used for evoked data.
    */
   constructor(public frame = 0) {}
@@ -42,7 +41,6 @@ export class Data {
     console.log(matData);
 
     const chNumber = channel || matData.data.ch_number[0];
-    // const chNumber = 0;
     const isEvoked = matData.data.evoked_flag[0] === 1;
     const samplingRate = matData.data.sampling_rate[0];
     const recordValues = matData.data.record_values[chNumber];
@@ -79,6 +77,7 @@ export class Data {
     return Math.max(Math.abs(this.min), Math.abs(this.max));
   }
 
+  /** Get the interpolated data, which is the average of every `interpolationDegree` points. */
   public get interpolated() {
     if (this.isEvoked) return this.data;
     const interpolated: number[] = [];
@@ -100,6 +99,7 @@ export class Data {
     return interpolated;
   }
 
+  /** Get x and y coordinates of the signal for plotting. */
   public points(interpolated = true) {
     if (this.isEvoked) {
       interpolated = false;

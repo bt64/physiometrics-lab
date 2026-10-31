@@ -1,5 +1,5 @@
 import { clamp } from "./clamp";
-import { setScale } from "./draw";
+import type { Renderer } from "./renderer";
 
 const scrollh = document.querySelector("div.scroll.h") as HTMLDivElement;
 
@@ -20,6 +20,11 @@ let scrollDragStartLeft = 0;
 let scrollDragStartRight = 0;
 let scrollLeft = border.left;
 let scrollRight = border.right;
+let renderer: Renderer;
+
+export const init = (r: Renderer) => {
+  renderer = r;
+};
 
 export const reset = () => {
   width = window.innerWidth - border.left - border.right;
@@ -28,7 +33,7 @@ export const reset = () => {
   scrollh.style.left = scrollLeft + "px";
   scrollh.style.right = scrollRight + "px";
 
-  setScale(
+  renderer.setScale(
     (width + border.left + border.right - scrollLeft - scrollRight) / width,
     (scrollLeft - border.left) / width,
   );
@@ -40,7 +45,7 @@ scrollh.addEventListener("pointermove", (e) => {
   if (e.offsetX < 12 || e.offsetX > scrollh.clientWidth - 12) {
     scrollh.style.cursor = "ew-resize";
   } else {
-    scrollh.style.cursor = "default";
+    scrollh.style.cursor = "crosshair";
   }
 });
 
@@ -82,7 +87,7 @@ window.addEventListener("pointermove", (e) => {
     scrollh.style.right = scrollRight + "px";
   }
 
-  setScale(
+  renderer.setScale(
     (width + border.left + border.right - scrollLeft - scrollRight) / width,
     (scrollLeft - border.left) / width,
   );
@@ -107,7 +112,7 @@ window.addEventListener("pointerup", () => {
   mouseDown = false;
   scrollResize = null;
   scrollDrag = false;
-  document.body.style.cursor = "default";
+  document.body.style.cursor = "crosshair";
 });
 
 window.addEventListener("wheel", (e) => {
@@ -132,7 +137,7 @@ window.addEventListener("wheel", (e) => {
   scrollh.style.left = scrollLeft + "px";
   scrollh.style.right = scrollRight + "px";
 
-  setScale(
+  renderer.setScale(
     (width + border.left + border.right - scrollLeft - scrollRight) / width,
     (scrollLeft - border.left) / width,
   );

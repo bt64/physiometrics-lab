@@ -1,0 +1,13 @@
+.cursor {
+  position: fixed;
+  translate: 0 -100%;
+  background-color: #fffc;
+  padding: 4px;
+  width: max-content;
+  pointer-events: none;
+  font-size: 9px;
+
+  &:empty {
+    display: none;
+  }
+}

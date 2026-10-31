@@ -1,10 +1,10 @@
 // @ts-ignore
 import "@fontsource-variable/roboto-mono";
-import "./style/main.css";
+
 import { Data } from "./data";
-import { draw } from "./draw";
-import "./scroll";
-import { reset } from "./scroll";
+import { init, reset } from "./scroll";
+import { Renderer } from "./renderer";
+import { Cursor } from "./cursor";
 
 const container = document.querySelector("div.container") as HTMLDivElement;
 const controls = document.querySelector("div.controls") as HTMLDivElement;
@@ -19,6 +19,10 @@ const infoP = document.querySelector("p.info") as HTMLParagraphElement;
 
 let file: File | undefined;
 let data = new Data();
+let renderer = new Renderer(data);
+
+init(renderer);
+new Cursor(renderer);
 
 const load = async (channel?: number, frame?: number) => {
   if (!file) {
@@ -28,7 +32,7 @@ const load = async (channel?: number, frame?: number) => {
   }
 
   await data.loadFromFile(file, channel, frame);
-  draw(data);
+  renderer.render();
   reset();
   container.hidden = false;
   controls.classList.remove("hide");

@@ -9,6 +9,7 @@
   border-top: 1.5px solid #bbb;
   padding: 0 64px;
   width: 100%;
+  height: 32px;
 }
 
 .axis.y {
@@ -26,6 +27,7 @@
   align-items: center;
   gap: 6px;
   width: 48px;
+  height: max-content;
   font-size: 10px;
 }
 

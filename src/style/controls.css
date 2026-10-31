@@ -3,6 +3,7 @@
   align-items: center;
   place-self: start;
   gap: 16px;
+  cursor: default;
   padding: 16px;
   width: 100%;
   height: 100%;
@@ -35,9 +36,11 @@ input[type="file"] {
   display: none;
 }
 
-label[for="file"] {
+label[for="file"],
+button {
   transition: background-color 100ms;
   cursor: pointer;
+  border: none;
   background-color: #222;
   padding: 8px 16px;
   color: #fff;

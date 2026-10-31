@@ -4,17 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "bun ./index.html --watch",
+    "build": "bun build --compile --target=browser ./index.html --outdir=dist"
   },
   "devDependencies": {
-    "typescript": "~6.0.3",
-    "vite": "^8.0.16",
-    "vite-plugin-singlefile": "^2.3.3"
+    "typescript": "~7.0.2"
   },
   "dependencies": {
-    "@fontsource-variable/roboto-mono": "^5.2.9",
+    "@fontsource-variable/roboto-mono": "^5.3.0",
     "mat-for-js": "^1.1.0"
   }
 }
