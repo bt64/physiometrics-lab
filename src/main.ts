@@ -2,9 +2,10 @@
 import "@fontsource-variable/roboto-mono";
 
 import { Data } from "./data";
-import { init, reset } from "./scroll";
+import { Scroll } from "./scroll";
 import { Renderer } from "./renderer";
 import { Cursor } from "./cursor";
+import { Selection } from "./selection";
 
 const container = document.querySelector("div.container") as HTMLDivElement;
 const controls = document.querySelector("div.controls") as HTMLDivElement;
@@ -14,6 +15,9 @@ const frameInput = document.querySelector("input#frame") as HTMLInputElement;
 const channelInput = document.querySelector(
   "input#channel",
 ) as HTMLInputElement;
+const interpolationInput = document.querySelector(
+  "input#interpolation",
+) as HTMLInputElement;
 
 const infoP = document.querySelector("p.info") as HTMLParagraphElement;
 
@@ -21,8 +25,9 @@ let file: File | undefined;
 let data = new Data();
 let renderer = new Renderer(data);
 
-init(renderer);
+const scroll = new Scroll(renderer);
 new Cursor(renderer);
+new Selection(renderer);
 
 const load = async (channel?: number, frame?: number) => {
   if (!file) {
@@ -33,7 +38,7 @@ const load = async (channel?: number, frame?: number) => {
 
   await data.loadFromFile(file, channel, frame);
   renderer.render();
-  reset();
+  scroll.reset();
   container.hidden = false;
   controls.classList.remove("hide");
 
@@ -49,9 +54,13 @@ const load = async (channel?: number, frame?: number) => {
     frameInput.max = (data.frameCount - 1).toString();
     frameInput.labels![0].hidden = false;
     frameInput.hidden = false;
+    interpolationInput.hidden = true;
+    interpolationInput.labels![0].hidden = true;
   } else {
     frameInput.labels![0].hidden = true;
     frameInput.hidden = true;
+    interpolationInput.hidden = false;
+    interpolationInput.labels![0].hidden = false;
   }
 
   const duration =
@@ -65,7 +74,14 @@ const load = async (channel?: number, frame?: number) => {
 fileInput.addEventListener("change", async (event) => {
   file = (event.target as HTMLInputElement).files?.[0];
   frameInput.value = "0";
+  interpolationInput.value = "4";
+  data.interpolationDegree = interpolationInput.valueAsNumber;
   await load();
+});
+
+interpolationInput.addEventListener("input", () => {
+  data.interpolationDegree = interpolationInput.valueAsNumber;
+  renderer.render();
 });
 
 frameInput.addEventListener("input", async () => {

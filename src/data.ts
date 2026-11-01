@@ -13,8 +13,6 @@ export type Point = {
   y: number;
 };
 
-const interpolationDegree = 4;
-
 export class Data {
   /** The voltage values of the signal. */
   public data: number[] = [];
@@ -26,6 +24,9 @@ export class Data {
   public channel: number = 0;
   /** The number of frames in the data. Only used for evoked data. */
   public frameCount = 0;
+
+  /** The number of points to average for interpolation. Only used for non-evoked data. */
+  public interpolationDegree = 4;
 
   /**
    * @param frame The frame number to read (0-based). Only used for evoked data.
@@ -88,7 +89,7 @@ export class Data {
     for (const point of this.data) {
       a += point;
       n++;
-      if (n === interpolationDegree) {
+      if (n === this.interpolationDegree) {
         interpolated.push(a / n);
 
         a = 0;
@@ -109,11 +110,61 @@ export class Data {
     const data = interpolated ? this.interpolated : this.data;
 
     for (let i = 0; i < data.length; i++) {
-      const x = interpolated ? i * interpolationDegree : i;
+      const x = interpolated ? i * this.interpolationDegree : i;
       const y = -data[i];
       points.push({ x, y });
     }
 
     return points;
+  }
+
+  public getLocalExtrema(start: number, end: number) {
+    const points = this.points(true);
+    const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
+
+    const pointsInRange = points.slice(
+      start / interpolation,
+      end / interpolation,
+    );
+
+    const min: Point[] = [];
+    const max: Point[] = [];
+
+    for (let i = 1; i < pointsInRange.length - 1; i++) {
+      const prev = pointsInRange[i - 1];
+      const curr = pointsInRange[i];
+      const next = pointsInRange[i + 1];
+
+      if (curr.y <= prev.y && curr.y < next.y) {
+        min.push(curr);
+      } else if (curr.y >= prev.y && curr.y > next.y) {
+        max.push(curr);
+      }
+    }
+
+    return { all: [...min, ...max], min, max };
+  }
+
+  /**
+   * Calculate the mean frequency of the signal in the given range.
+   * @param points The points of the signal to calculate the frequency from.
+   * @returns The mean frequency of the signal in Hz.
+   */
+  public getFrequency(points: Point[]) {
+    if (points.length < 2) return 0;
+
+    let timeDiffSum = 0;
+
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+
+      const timeDiff = (curr.x - prev.x) / this.samplingRate;
+      timeDiffSum += timeDiff;
+    }
+
+    const meanTimeDiff = timeDiffSum / (points.length - 1);
+
+    return 1 / meanTimeDiff;
   }
 }

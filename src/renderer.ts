@@ -1,14 +1,21 @@
-import type { Data } from "./data";
+import { type Data } from "./data";
 
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 
 export class Renderer {
   svg = document.querySelector("svg")!;
-  container = document.querySelector("div.container")!;
+  container = document.querySelector("div.container") as HTMLDivElement;
   baseW = 0;
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
+  }
+
+  svgToScreen(x: number, y: number) {
+    const svgPoint = this.svg.createSVGPoint();
+    svgPoint.x = x;
+    svgPoint.y = y;
+    return svgPoint.matrixTransform(this.svg.getScreenCTM()!);
   }
 
   screenToSvg(x: number, y: number) {
@@ -50,7 +57,7 @@ export class Renderer {
     this.drawAxisLabels();
   }
 
-  drawZeroLine() {
+  private drawZeroLine() {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
     line.setAttribute("x1", "0");
@@ -64,7 +71,7 @@ export class Renderer {
     this.svg.appendChild(line);
   }
 
-  drawSignalGraph() {
+  private drawSignalPlot() {
     const polyline = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "polyline",
@@ -87,7 +94,7 @@ export class Renderer {
     this.svg.appendChild(polyline);
   }
 
-  drawAxisLabels(force = false) {
+  private drawAxisLabels(force = false) {
     const axisX = document.querySelector("div.axis.x")!;
     const axisY = document.querySelector("div.axis.y")!;
 
@@ -131,7 +138,7 @@ export class Renderer {
     this.updateAxisLabels();
   }
 
-  updateAxisLabels() {
+  private updateAxisLabels() {
     const axisX = document.querySelector("div.axis.x")!;
     const axisY = document.querySelector("div.axis.y")!;
 
@@ -151,6 +158,48 @@ export class Renderer {
       let v = this.screenToData(0, y).y;
 
       p.textContent = v;
+    }
+  }
+
+  drawSelection(start: number, end: number) {
+    let rect = this.svg.querySelector("rect");
+    if (!rect)
+      rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+    if (start > end) [start, end] = [end, start];
+
+    rect.setAttribute("x", start.toString());
+    rect.setAttribute("y", (-this.data.absMax * 1.1).toString());
+    rect.setAttribute("width", (end - start).toString());
+    rect.setAttribute("height", (this.data.absMax * 2 * 1.1).toString());
+    rect.setAttribute("fill", "#0002");
+    rect.setAttribute("vector-effect", "non-scaling-stroke");
+
+    this.svg.appendChild(rect);
+  }
+
+  drawLocalExtrema(start: number, end: number) {
+    let g = this.svg.querySelector("g");
+    if (!g) {
+      g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      this.svg.appendChild(g);
+    }
+
+    g.replaceChildren();
+
+    for (const p of this.data.getLocalExtrema(start, end).all) {
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path",
+      );
+
+      path.setAttribute("d", `M ${p.x} ${p.y} l 0.001 0`);
+      path.setAttribute("stroke", "#222");
+      path.setAttribute("stroke-width", "5");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("vector-effect", "non-scaling-stroke");
+
+      g.appendChild(path);
     }
   }
 
@@ -174,7 +223,7 @@ export class Renderer {
     Promise.resolve().then(() => {
       this.drawAxisLabels(true);
       this.drawZeroLine();
-      this.drawSignalGraph();
+      this.drawSignalPlot();
       this.setScale(1, 0);
     });
   }

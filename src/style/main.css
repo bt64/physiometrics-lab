@@ -2,6 +2,7 @@
 @import "./axis.css";
 @import "./scroll.css";
 @import "./cursor.css";
+@import "./selection.css";
 
 * {
   box-sizing: border-box;

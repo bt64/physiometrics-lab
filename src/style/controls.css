@@ -51,6 +51,20 @@ button {
   }
 }
 
+label[for="file"] {
+  background-color: #222;
+  padding: 8px 16px;
+  color: #fff;
+
+  &:hover {
+    background-color: #333;
+  }
+}
+
+label:has(+ input:disabled) {
+  color: #aaa;
+}
+
 input[type="number"] {
   border: none;
   background-color: #e2e2e2;
@@ -60,5 +74,10 @@ input[type="number"] {
 
   &:hover {
     background-color: #d2d2d2;
+  }
+
+  &:disabled {
+    background-color: transparent;
+    color: #aaa;
   }
 }

@@ -1,8 +1,6 @@
 import { clamp } from "./clamp";
 import type { Renderer } from "./renderer";
 
-const scrollh = document.querySelector("div.scroll.h") as HTMLDivElement;
-
 const border = {
   left: 49.5,
   right: 16,
@@ -10,135 +8,132 @@ const border = {
 
 const minWidth = 24;
 
-let width = window.innerWidth - border.left - border.right;
+export class Scroll {
+  private readonly scrollh = document.querySelector(
+    "div.scroll.h",
+  ) as HTMLDivElement;
+  private width = window.innerWidth - border.left - border.right;
+  private mouseDown = false;
+  private scrollResize: "left" | "right" | null = null;
+  private scrollDrag = false;
+  private scrollDragStart = 0;
+  private scrollDragStartLeft = 0;
+  private scrollDragStartRight = 0;
+  private scrollLeft = border.left;
+  private scrollRight = border.right;
 
-let mouseDown = false;
-let scrollResize: "left" | "right" | null = null;
-let scrollDrag = false;
-let scrollDragStart = 0;
-let scrollDragStartLeft = 0;
-let scrollDragStartRight = 0;
-let scrollLeft = border.left;
-let scrollRight = border.right;
-let renderer: Renderer;
+  constructor(private renderer: Renderer) {
+    window.addEventListener("resize", () => this.reset());
 
-export const init = (r: Renderer) => {
-  renderer = r;
-};
+    this.scrollh.addEventListener("pointermove", (e) => {
+      if (e.offsetX < 12 || e.offsetX > this.scrollh.clientWidth - 12) {
+        this.scrollh.style.cursor = "ew-resize";
+      } else {
+        this.scrollh.style.cursor = "crosshair";
+      }
+    });
 
-export const reset = () => {
-  width = window.innerWidth - border.left - border.right;
-  scrollLeft = border.left;
-  scrollRight = border.right;
-  scrollh.style.left = scrollLeft + "px";
-  scrollh.style.right = scrollRight + "px";
+    window.addEventListener("pointermove", (e) => {
+      if (!this.mouseDown) return;
+      document.body.style.cursor = "ew-resize";
 
-  renderer.setScale(
-    (width + border.left + border.right - scrollLeft - scrollRight) / width,
-    (scrollLeft - border.left) / width,
-  );
-};
+      if (this.scrollResize === "left") {
+        this.scrollLeft = clamp(
+          e.x,
+          border.left,
+          this.width + border.right - this.scrollRight - minWidth,
+        );
+        this.scrollh.style.left = this.scrollLeft + "px";
+      }
 
-window.addEventListener("resize", reset);
+      if (this.scrollResize === "right") {
+        this.scrollRight = clamp(
+          this.width + border.right + border.left - e.x,
+          border.right,
+          this.width + border.right - this.scrollLeft - minWidth,
+        );
+        this.scrollh.style.right = this.scrollRight + "px";
+      }
 
-scrollh.addEventListener("pointermove", (e) => {
-  if (e.offsetX < 12 || e.offsetX > scrollh.clientWidth - 12) {
-    scrollh.style.cursor = "ew-resize";
-  } else {
-    scrollh.style.cursor = "crosshair";
+      if (this.scrollDrag) {
+        let delta = e.x - this.scrollDragStart;
+
+        if (this.scrollDragStartLeft + delta < border.left) {
+          delta = border.left - this.scrollDragStartLeft;
+        } else if (this.scrollDragStartRight - delta < border.right) {
+          delta = this.scrollDragStartRight - border.right;
+        }
+
+        this.scrollLeft = this.scrollDragStartLeft + delta;
+        this.scrollRight = this.scrollDragStartRight - delta;
+
+        this.scrollh.style.left = this.scrollLeft + "px";
+        this.scrollh.style.right = this.scrollRight + "px";
+      }
+
+      this.setScale();
+    });
+
+    this.scrollh.addEventListener("pointerdown", (e) => {
+      this.mouseDown = true;
+      if (e.offsetX < 16 || e.offsetX > this.scrollh.clientWidth - 16) {
+        const l = e.offsetX;
+        const r = this.scrollh.clientWidth - e.offsetX;
+        this.scrollResize = l < r ? "left" : "right";
+        return;
+      }
+
+      this.scrollDrag = true;
+      this.scrollDragStart = e.x;
+      this.scrollDragStartLeft = this.scrollLeft;
+      this.scrollDragStartRight = this.scrollRight;
+    });
+
+    window.addEventListener("pointerup", () => {
+      this.mouseDown = false;
+      this.scrollResize = null;
+      this.scrollDrag = false;
+      document.body.style.cursor = "crosshair";
+    });
+
+    window.addEventListener("wheel", (e) => {
+      let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      delta *= this.width / (window.innerWidth * 5);
+
+      if (this.scrollLeft + delta < border.left) {
+        delta = border.left - this.scrollLeft;
+      } else if (this.scrollRight - delta < border.right) {
+        delta = this.scrollRight - border.right;
+      }
+
+      this.scrollLeft += delta;
+      this.scrollRight -= delta;
+
+      this.scrollh.style.left = this.scrollLeft + "px";
+      this.scrollh.style.right = this.scrollRight + "px";
+
+      this.setScale();
+    });
   }
-});
 
-window.addEventListener("pointermove", (e) => {
-  if (!mouseDown) return;
-  document.body.style.cursor = "ew-resize";
+  reset() {
+    this.width = window.innerWidth - border.left - border.right;
+    this.scrollLeft = border.left;
+    this.scrollRight = border.right;
+    this.scrollh.style.left = this.scrollLeft + "px";
+    this.scrollh.style.right = this.scrollRight + "px";
+    this.setScale();
+  }
 
-  if (scrollResize === "left") {
-    scrollLeft = clamp(
-      e.x,
-      border.left,
-      width + border.right - scrollRight - minWidth,
+  private setScale() {
+    this.renderer.setScale(
+      (this.width +
+        border.left +
+        border.right -
+        this.scrollLeft -
+        this.scrollRight) /
+        this.width,
+      (this.scrollLeft - border.left) / this.width,
     );
-    scrollh.style.left = scrollLeft + "px";
   }
-
-  if (scrollResize === "right") {
-    scrollRight = clamp(
-      width + border.right + border.left - e.x,
-      border.right,
-      width + border.right - scrollLeft - minWidth,
-    );
-    scrollh.style.right = scrollRight + "px";
-  }
-
-  if (scrollDrag) {
-    let delta = e.x - scrollDragStart;
-
-    if (scrollDragStartLeft + delta < border.left) {
-      delta = border.left - scrollDragStartLeft;
-    } else if (scrollDragStartRight - delta < border.right) {
-      delta = scrollDragStartRight - border.right;
-    }
-
-    scrollLeft = scrollDragStartLeft + delta;
-    scrollRight = scrollDragStartRight - delta;
-
-    scrollh.style.left = scrollLeft + "px";
-    scrollh.style.right = scrollRight + "px";
-  }
-
-  renderer.setScale(
-    (width + border.left + border.right - scrollLeft - scrollRight) / width,
-    (scrollLeft - border.left) / width,
-  );
-});
-
-scrollh.addEventListener("pointerdown", (e) => {
-  mouseDown = true;
-  if (e.offsetX < 16 || e.offsetX > scrollh.clientWidth - 16) {
-    const l = e.offsetX;
-    const r = scrollh.clientWidth - e.offsetX;
-    scrollResize = l < r ? "left" : "right";
-    return;
-  }
-
-  scrollDrag = true;
-  scrollDragStart = e.x;
-  scrollDragStartLeft = scrollLeft;
-  scrollDragStartRight = scrollRight;
-});
-
-window.addEventListener("pointerup", () => {
-  mouseDown = false;
-  scrollResize = null;
-  scrollDrag = false;
-  document.body.style.cursor = "crosshair";
-});
-
-window.addEventListener("wheel", (e) => {
-  let delta = 0;
-  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-    delta = e.deltaX;
-  } else {
-    delta = e.deltaY;
-  }
-
-  delta *= width / (window.innerWidth * 5);
-
-  if (scrollLeft + delta < border.left) {
-    delta = border.left - scrollLeft;
-  } else if (scrollRight - delta < border.right) {
-    delta = scrollRight - border.right;
-  }
-
-  scrollLeft = scrollLeft + delta;
-  scrollRight = scrollRight - delta;
-
-  scrollh.style.left = scrollLeft + "px";
-  scrollh.style.right = scrollRight + "px";
-
-  renderer.setScale(
-    (width + border.left + border.right - scrollLeft - scrollRight) / width,
-    (scrollLeft - border.left) / width,
-  );
-});
+}
