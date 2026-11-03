@@ -16,18 +16,25 @@
     <div class="axis y"></div>
 
     <div class="scroll h"></div>
+    <p class="info"></p>
   </div>
 
   <div class="controls hide">
     <label for="file">LOAD FILE</label>
     <input type="file" id="file" accept=".anz">
-    <label for="frame">Frame:</label>
-    <input type="number" id="frame" min="0" value="0">
-    <label for="channel">Channel:</label>
-    <input type="number" id="channel" min="0" max="2" value="0">
-    <label for="interpolation">Interpolation:</label>
-    <input type="number" id="interpolation" min="1" max="8" value="4">
-    <p class="info"></p>
+    <div>
+      <span>OPT</span>
+      <label for="frame">frame:</label>
+      <input type="number" id="frame" min="0" value="0">
+      <label for="channel">channel:</label>
+      <input type="number" id="channel" min="0" max="2" value="0">
+      <label for="interpolation">interpolation:</label>
+      <input type="number" id="interpolation" min="1" max="8" value="4">
+    </div>
+
+    <div class="stat">
+      <span>STAT</span>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

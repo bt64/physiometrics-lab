@@ -157,6 +157,7 @@ export class Renderer {
 
       const y = p.offsetTop + p.clientHeight / 2;
       let v = this.screenToData(0, y).y;
+      if (Math.abs(Number(v)) < 1e-6) v = "0.00";
 
       p.textContent = v;
     }

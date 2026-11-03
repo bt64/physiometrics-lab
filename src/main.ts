@@ -1,4 +1,3 @@
-// @ts-ignore
 import "@fontsource-variable/roboto-mono";
 
 import { Data } from "./data";
@@ -26,8 +25,8 @@ let data = new Data();
 let renderer = new Renderer(data);
 
 const scroll = new Scroll(renderer);
+const selection = new Selection(renderer);
 new Cursor(renderer);
-new Selection(renderer);
 
 const load = async (channel?: number, frame?: number) => {
   if (!file) {
@@ -39,6 +38,8 @@ const load = async (channel?: number, frame?: number) => {
   await data.loadFromFile(file, channel, frame);
   renderer.render();
   scroll.reset();
+  selection.reset();
+
   container.hidden = false;
   controls.classList.remove("hide");
 

@@ -95,6 +95,8 @@ export abstract class Statistics {
 
     let timeDiffSum = 0;
 
+    points.sort((a, b) => a.x - b.x);
+
     for (let i = 1; i < points.length; i++) {
       const prev = points[i - 1];
       const curr = points[i];

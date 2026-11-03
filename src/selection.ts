@@ -6,9 +6,17 @@ export class Selection {
   end: number = 0;
 
   selecting = false;
+  statDiv = document.querySelector("div.stat") as HTMLDivElement;
+  stat = {
+    "frequency (Hz)": 0,
+    mean: 0,
+    range: 0,
+    "mean amplitude": 0,
+  };
 
-  constructor(r: Renderer) {
-    r.container.addEventListener("pointerdown", (e) => {
+  constructor(private r: Renderer) {
+    this.updateStatDiv();
+    this.r.container.addEventListener("pointerdown", (e) => {
       if (e.clientY < SVG_PADDING.top) return;
       if (e.button !== 0) return;
       this.start = r.screenToSvg(e.clientX, 0).x;
@@ -18,42 +26,75 @@ export class Selection {
     window.addEventListener("pointermove", (e) => {
       if (!this.selecting) return;
 
-      this.end = r.screenToSvg(e.clientX, 0).x;
-      r.drawSelection(this.start, this.end);
+      this.end = this.r.screenToSvg(e.clientX, 0).x;
+      this.r.drawSelection(this.start, this.end);
     });
 
     window.addEventListener("pointerup", (e) => {
       if (!this.selecting) return;
 
-      this.end = r.screenToSvg(e.clientX, 0).x;
+      this.end = this.r.screenToSvg(e.clientX, 0).x;
       this.selecting = false;
 
-      if (this.start > this.end) {
-        [this.start, this.end] = [this.end, this.start];
-      }
-
-      if (this.start < 0) this.start = 0;
-      if (this.end > r.baseW) this.end = r.baseW;
-
-      if (this.end - this.start < r.baseW * 0.001) {
-        this.start = 0;
-        this.end = 0;
-      }
-
-      const points = r.data.pointsInRange(this.start, this.end);
-      r.drawSelection(this.start, this.end);
-      r.drawLocalExtrema(points);
-
-      const { min, max, all } = Statistics.localExtrema(points);
-      const mean = Statistics.mean(points);
-      const { range } = Statistics.range(points);
-      const meanAmplitude = Statistics.meanAmplitude(min, max);
-      const frequency = Statistics.frequency(all, r.data.samplingRate) / 2;
-
-      console.log("frequency:", frequency);
-      console.log("mean:", mean);
-      console.log("range:", range);
-      console.log("mean amplitude:", meanAmplitude);
+      this.calculateSelection();
     });
+  }
+
+  private calculateSelection() {
+    if (this.start > this.end) {
+      [this.start, this.end] = [this.end, this.start];
+    }
+
+    if (this.start < 0) this.start = 0;
+    if (this.end > this.r.baseW) this.end = this.r.baseW;
+
+    if (this.end - this.start < this.r.baseW * 0.001) {
+      this.start = 0;
+      this.end = 0;
+    }
+
+    const points = this.r.data.pointsInRange(this.start, this.end);
+    this.r.drawSelection(this.start, this.end);
+    this.r.drawLocalExtrema(points);
+
+    const { min, max, all } = Statistics.localExtrema(points);
+    const mean = Statistics.mean(points);
+    const { range } = Statistics.range(points);
+    const meanAmplitude = Statistics.meanAmplitude(min, max);
+    const frequency = Statistics.frequency(all, this.r.data.samplingRate) / 2;
+
+    this.stat = {
+      "frequency (Hz)": frequency,
+      mean: mean,
+      range: range,
+      "mean amplitude": meanAmplitude,
+    };
+    this.updateStatDiv();
+  }
+
+  private updateStatDiv() {
+    this.statDiv.querySelectorAll("div")!.forEach((div) => div.remove());
+    for (const [key, value] of Object.entries(this.stat)) {
+      const div = document.createElement("div");
+      const p1 = document.createElement("p");
+      const p2 = document.createElement("p");
+      p1.textContent = key;
+      p2.textContent = value === 0 ? "-" : value.toFixed(3);
+      div.append(p1, p2);
+      this.statDiv.append(div);
+    }
+  }
+
+  public reset() {
+    this.start = 0;
+    this.end = 0;
+    this.selecting = false;
+    this.stat = {
+      "frequency (Hz)": 0,
+      mean: 0,
+      range: 0,
+      "mean amplitude": 0,
+    };
+    this.updateStatDiv();
   }
 }
