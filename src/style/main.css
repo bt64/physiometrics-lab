@@ -20,6 +20,12 @@ body {
   height: 100vh;
 }
 
+p.error {
+  place-self: center;
+  padding: 16px;
+  text-align: center;
+}
+
 .container {
   position: relative;
   width: 100%;

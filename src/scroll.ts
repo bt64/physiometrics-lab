@@ -29,7 +29,7 @@ export class Scroll {
       if (e.offsetX < 12 || e.offsetX > this.scrollh.clientWidth - 12) {
         this.scrollh.style.cursor = "ew-resize";
       } else {
-        this.scrollh.style.cursor = "crosshair";
+        this.scrollh.style.cursor = "default";
       }
     });
 

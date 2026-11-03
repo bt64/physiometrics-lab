@@ -28,6 +28,13 @@ const scroll = new Scroll(renderer);
 const selection = new Selection(renderer);
 new Cursor(renderer);
 
+// Error if no mouse is available (touch devices are not supported)
+if (window.matchMedia("(any-hover: none)").matches) {
+  document.body.innerHTML =
+    '<p class="error">Touch devices are not supported</p>';
+  throw new Error("touch device");
+}
+
 const load = async (channel?: number, frame?: number) => {
   if (!file) {
     controls.classList.add("hide");
