@@ -118,53 +118,10 @@ export class Data {
     return points;
   }
 
-  public getLocalExtrema(start: number, end: number) {
+  public pointsInRange(start: number, end: number) {
     const points = this.points(true);
     const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
 
-    const pointsInRange = points.slice(
-      start / interpolation,
-      end / interpolation,
-    );
-
-    const min: Point[] = [];
-    const max: Point[] = [];
-
-    for (let i = 1; i < pointsInRange.length - 1; i++) {
-      const prev = pointsInRange[i - 1];
-      const curr = pointsInRange[i];
-      const next = pointsInRange[i + 1];
-
-      if (curr.y <= prev.y && curr.y < next.y) {
-        min.push(curr);
-      } else if (curr.y >= prev.y && curr.y > next.y) {
-        max.push(curr);
-      }
-    }
-
-    return { all: [...min, ...max], min, max };
-  }
-
-  /**
-   * Calculate the mean frequency of the signal in the given range.
-   * @param points The points of the signal to calculate the frequency from.
-   * @returns The mean frequency of the signal in Hz.
-   */
-  public getFrequency(points: Point[]) {
-    if (points.length < 2) return 0;
-
-    let timeDiffSum = 0;
-
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-
-      const timeDiff = (curr.x - prev.x) / this.samplingRate;
-      timeDiffSum += timeDiff;
-    }
-
-    const meanTimeDiff = timeDiffSum / (points.length - 1);
-
-    return 1 / meanTimeDiff;
+    return points.slice(start / interpolation, end / interpolation);
   }
 }

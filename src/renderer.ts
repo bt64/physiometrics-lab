@@ -1,4 +1,5 @@
-import { type Data } from "./data";
+import { type Data, type Point } from "./data";
+import { Statistics } from "./statistics";
 
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 
@@ -178,16 +179,15 @@ export class Renderer {
     this.svg.appendChild(rect);
   }
 
-  drawLocalExtrema(start: number, end: number) {
+  drawLocalExtrema(points: Point[]) {
     let g = this.svg.querySelector("g");
     if (!g) {
       g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       this.svg.appendChild(g);
     }
-
     g.replaceChildren();
 
-    for (const p of this.data.getLocalExtrema(start, end).all) {
+    for (const p of Statistics.localExtrema(points).all) {
       const path = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "path",

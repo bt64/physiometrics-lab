@@ -1,4 +1,5 @@
 import { SVG_PADDING, type Renderer } from "./renderer";
+import { Statistics } from "./statistics";
 
 export class Selection {
   start: number = 0;
@@ -6,24 +7,25 @@ export class Selection {
 
   selecting = false;
 
-  constructor(renderer: Renderer) {
-    renderer.container.addEventListener("pointerdown", (e) => {
+  constructor(r: Renderer) {
+    r.container.addEventListener("pointerdown", (e) => {
       if (e.clientY < SVG_PADDING.top) return;
-      this.start = renderer.screenToSvg(e.clientX, 0).x;
+      if (e.button !== 0) return;
+      this.start = r.screenToSvg(e.clientX, 0).x;
       this.selecting = true;
     });
 
     window.addEventListener("pointermove", (e) => {
       if (!this.selecting) return;
 
-      this.end = renderer.screenToSvg(e.clientX, 0).x;
-      renderer.drawSelection(this.start, this.end);
+      this.end = r.screenToSvg(e.clientX, 0).x;
+      r.drawSelection(this.start, this.end);
     });
 
     window.addEventListener("pointerup", (e) => {
       if (!this.selecting) return;
 
-      this.end = renderer.screenToSvg(e.clientX, 0).x;
+      this.end = r.screenToSvg(e.clientX, 0).x;
       this.selecting = false;
 
       if (this.start > this.end) {
@@ -31,20 +33,27 @@ export class Selection {
       }
 
       if (this.start < 0) this.start = 0;
-      if (this.end > renderer.baseW) this.end = renderer.baseW;
+      if (this.end > r.baseW) this.end = r.baseW;
 
-      if (this.end - this.start < renderer.baseW * 0.001) {
+      if (this.end - this.start < r.baseW * 0.001) {
         this.start = 0;
         this.end = 0;
       }
 
-      renderer.drawSelection(this.start, this.end);
-      renderer.drawLocalExtrema(this.start, this.end);
-      const { min, max } = renderer.data.getLocalExtrema(this.start, this.end);
-      console.log(
-        renderer.data.getFrequency(min),
-        renderer.data.getFrequency(max),
-      );
+      const points = r.data.pointsInRange(this.start, this.end);
+      r.drawSelection(this.start, this.end);
+      r.drawLocalExtrema(points);
+
+      const { min, max, all } = Statistics.localExtrema(points);
+      const mean = Statistics.mean(points);
+      const { range } = Statistics.range(points);
+      const meanAmplitude = Statistics.meanAmplitude(min, max);
+      const frequency = Statistics.frequency(all, r.data.samplingRate) / 2;
+
+      console.log("frequency:", frequency);
+      console.log("mean:", mean);
+      console.log("range:", range);
+      console.log("mean amplitude:", meanAmplitude);
     });
   }
 }
