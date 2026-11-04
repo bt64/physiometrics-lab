@@ -237,8 +237,9 @@ export class Renderer {
   async copyPngToClipboard() {
     const toHide = ["div.cursor", "div.scroll", "rect", "button"];
 
-    for (const el of toHide) {
-      (this.container.querySelector(el) as HTMLElement).style.display = "none";
+    for (const str of toHide) {
+      const el = this.container.querySelector(str) as HTMLElement;
+      if (el) el.style.display = "none";
     }
 
     const png = await toPng(this.container);
@@ -248,8 +249,9 @@ export class Renderer {
     link.href = png;
     link.click();
 
-    for (const el of toHide) {
-      (this.container.querySelector(el) as HTMLElement).style.display = "";
+    for (const str of toHide) {
+      const el = this.container.querySelector(str) as HTMLElement;
+      if (el) el.style.display = "";
     }
   }
 }
