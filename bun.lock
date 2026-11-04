@@ -6,6 +6,7 @@
       "name": "physiometrics-lab",
       "dependencies": {
         "@fontsource-variable/roboto-mono": "^5.3.0",
+        "html-to-image": "^1.11.13",
         "mat-for-js": "^1.1.0",
       },
       "devDependencies": {
@@ -55,6 +56,8 @@
     "@typescript/typescript-win32-arm64": ["@typescript/typescript-win32-arm64@7.0.2", "", { "os": "win32", "cpu": "arm64" }, "sha512-Gyl1Vy6OsWesLzmq+EP0Fb7b4Nid5232AvcA2SFcdYreldpNtYFFofPjnt62y9hQy7VTaZp65ICJjuAQRaVcIQ=="],
 
     "@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="],
+
+    "html-to-image": ["html-to-image@1.11.13", "", {}, "sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg=="],
 
     "mat-for-js": ["mat-for-js@1.1.0", "", { "dependencies": { "pako": "^1.0.11" } }, "sha512-2yZygGgHUnz7eM9OD3io+J9fzXNCe4wXwIAfSV7rwvH9ZoKip4vpfOkwJBYmbJ+ntzgsJfcAK0ONBJCEf0v3FQ=="],
 

@@ -1,15 +1,20 @@
 import { type Data, type Point } from "./data";
 import { Statistics } from "./statistics";
+import { toPng } from "html-to-image";
 
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 
 export class Renderer {
   svg = document.querySelector("svg")!;
   container = document.querySelector("div.container") as HTMLDivElement;
+  copyButton = this.container.querySelector("button") as HTMLButtonElement;
   baseW = 0;
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
+    this.copyButton.addEventListener("click", async () => {
+      await this.copyPngToClipboard();
+    });
   }
 
   svgToScreen(x: number, y: number) {
@@ -227,5 +232,24 @@ export class Renderer {
       this.drawSignalPlot();
       this.setScale(1, 0);
     });
+  }
+
+  async copyPngToClipboard() {
+    const toHide = ["div.cursor", "div.scroll", "rect", "button"];
+
+    for (const el of toHide) {
+      (this.container.querySelector(el) as HTMLElement).style.display = "none";
+    }
+
+    const png = await toPng(this.container);
+
+    const link = document.createElement("a");
+    link.download = this.data.fileName.replace(/\.[^/.]+$/, "") + ".png";
+    link.href = png;
+    link.click();
+
+    for (const el of toHide) {
+      (this.container.querySelector(el) as HTMLElement).style.display = "";
+    }
   }
 }

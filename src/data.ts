@@ -14,6 +14,8 @@ export type Point = {
 };
 
 export class Data {
+  /** The name of the file that the data was loaded from. */
+  public fileName: string = "";
   /** The voltage values of the signal. */
   public data: number[] = [];
   /** The sampling rate of the signal in Hz. */
@@ -55,6 +57,7 @@ export class Data {
       }
     }
 
+    this.fileName = file.name;
     this.data = isEvoked ? evokedValues : (recordValues as number[]);
     this.samplingRate = samplingRate;
     this.isEvoked = isEvoked;

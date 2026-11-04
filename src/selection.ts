@@ -7,6 +7,8 @@ export class Selection {
 
   selecting = false;
   statDiv = document.querySelector("div.stat") as HTMLDivElement;
+  copyButton = this.statDiv.querySelector("button") as HTMLButtonElement;
+
   stat = {
     "frequency (Hz)": 0,
     mean: 0,
@@ -17,6 +19,7 @@ export class Selection {
   constructor(private r: Renderer) {
     this.updateStatDiv();
     this.r.container.addEventListener("pointerdown", (e) => {
+      if (e.target === this.r.copyButton) return;
       if (e.clientY < SVG_PADDING.top) return;
       if (e.button !== 0) return;
       this.start = r.screenToSvg(e.clientX, 0).x;
@@ -37,6 +40,10 @@ export class Selection {
       this.selecting = false;
 
       this.calculateSelection();
+    });
+
+    this.copyButton.addEventListener("click", () => {
+      this.copyToClipboard();
     });
   }
 
@@ -83,6 +90,15 @@ export class Selection {
       div.append(p1, p2);
       this.statDiv.append(div);
     }
+
+    this.copyButton.disabled = Object.values(this.stat).every((v) => v === 0);
+  }
+
+  private copyToClipboard() {
+    const text = Object.entries(this.stat)
+      .map(([key, value]) => `${key}\t${value}`)
+      .join("\n");
+    navigator.clipboard.writeText(text);
   }
 
   public reset() {

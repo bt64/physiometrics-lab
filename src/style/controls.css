@@ -16,6 +16,12 @@
     align-items: center;
     gap: 4px 16px;
 
+    button {
+      position: absolute;
+      top: -22px;
+      right: 0;
+    }
+
     span {
       position: absolute;
       top: -20px;
@@ -50,6 +56,24 @@
 
   &.hide :not(label[for="file"]) {
     display: none;
+  }
+}
+
+button {
+  border: none;
+  background-color: #222;
+  padding: 2px 8px;
+  color: #fff;
+  font-size: 12px;
+
+  &:not(:disabled):hover {
+    cursor: pointer;
+    background-color: #333;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    color: #ccc;
   }
 }
 
