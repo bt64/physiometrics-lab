@@ -91,6 +91,7 @@ interpolationInput.addEventListener("input", () => {
   data.interpolationDegree = interpolationInput.valueAsNumber;
   renderer.render();
   scroll.reset();
+  selection.reset();
 });
 
 frameInput.addEventListener("input", async () => {

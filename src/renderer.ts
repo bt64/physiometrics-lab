@@ -9,6 +9,8 @@ export class Renderer {
   container = document.querySelector("div.container") as HTMLDivElement;
   copyButton = this.container.querySelector("button") as HTMLButtonElement;
   baseW = 0;
+  cachedSVGMatrix: DOMMatrix | null = null;
+  markers: Point[] = [];
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
@@ -18,17 +20,19 @@ export class Renderer {
   }
 
   svgToScreen(x: number, y: number) {
+    const m = this.cachedSVGMatrix || this.svg.getScreenCTM()!;
     const svgPoint = this.svg.createSVGPoint();
     svgPoint.x = x;
     svgPoint.y = y;
-    return svgPoint.matrixTransform(this.svg.getScreenCTM()!);
+    return svgPoint.matrixTransform(m);
   }
 
   screenToSvg(x: number, y: number) {
+    const m = this.cachedSVGMatrix || this.svg.getScreenCTM()!;
     const screenPoint = this.svg.createSVGPoint();
     screenPoint.x = x;
     screenPoint.y = y;
-    return screenPoint.matrixTransform(this.svg.getScreenCTM()?.inverse());
+    return screenPoint.matrixTransform(m.inverse());
   }
 
   screenToData(x: number, y: number, format?: true): { x: string; y: string };
@@ -42,7 +46,6 @@ export class Renderer {
     x = svgPoint.x / this.data.samplingRate;
     if (this.data.isEvoked) x *= 1000;
     y = -svgPoint.y;
-    if (Math.abs(y) < 1e-6) y = 0;
 
     if (format) {
       return {
@@ -61,6 +64,8 @@ export class Renderer {
     viewBox.width = this.baseW * width;
     viewBox.x = this.baseW * x;
     this.drawAxisLabels();
+    // this.drawUnscaledCircle({ x: 100, y: 0 });
+    this.drawMarkers();
   }
 
   private drawZeroLine() {
@@ -75,6 +80,46 @@ export class Renderer {
     line.setAttribute("vector-effect", "non-scaling-stroke");
 
     this.svg.appendChild(line);
+  }
+
+  private drawMarkers() {
+    const size = 5;
+    const color = "#000";
+
+    const markersContainer = this.container.querySelector(
+      "div.markers",
+    ) as HTMLDivElement;
+
+    if (markersContainer.childElementCount !== this.markers.length) {
+      markersContainer.replaceChildren();
+
+      for (const _ of this.markers) {
+        markersContainer.append(document.createElement("div"));
+      }
+    }
+
+    const circles = markersContainer.querySelectorAll("div");
+
+    this.cachedSVGMatrix = this.svg.getScreenCTM();
+    const containerRect = this.container.getBoundingClientRect();
+
+    for (const [i, marker] of this.markers.entries()) {
+      const circle = circles[i];
+      const point = this.svgToScreen(marker.x, marker.y);
+      circle.style.position = "absolute";
+      circle.style.width = size + "px";
+      circle.style.height = size + "px";
+
+      circle.style.left = `${point.x - containerRect.left}px`;
+      circle.style.top = `${point.y - containerRect.top}px`;
+      circle.style.transform = "translate(-50%, -50%)";
+
+      circle.style.borderRadius = "50%";
+      circle.style.background = color;
+      circle.style.pointerEvents = "none";
+    }
+
+    this.cachedSVGMatrix = null;
   }
 
   private drawSignalPlot() {
@@ -148,9 +193,10 @@ export class Renderer {
     const axisX = document.querySelector("div.axis.x")!;
     const axisY = document.querySelector("div.axis.y")!;
 
+    this.cachedSVGMatrix = this.svg.getScreenCTM();
+
     for (let i = 1; i < axisX.childElementCount; i++) {
       const p = axisX.children[i] as HTMLParagraphElement;
-
       const x = p.offsetLeft + p.clientWidth / 2;
       let t = this.screenToData(x, 0).x;
 
@@ -159,13 +205,14 @@ export class Renderer {
 
     for (let i = 1; i < axisY.childElementCount; i++) {
       const p = axisY.children[i] as HTMLParagraphElement;
-
       const y = p.offsetTop + p.clientHeight / 2;
       let v = this.screenToData(0, y).y;
-      if (Math.abs(Number(v)) < 1e-6) v = "0.00";
+      if (i === axisY.childElementCount / 2) v = "0.00";
 
       p.textContent = v;
     }
+
+    this.cachedSVGMatrix = null;
   }
 
   drawSelection(start: number, end: number) {
@@ -186,27 +233,9 @@ export class Renderer {
   }
 
   drawLocalExtrema(points: Point[]) {
-    let g = this.svg.querySelector("g");
-    if (!g) {
-      g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      this.svg.appendChild(g);
-    }
-    g.replaceChildren();
+    this.markers = Statistics.localExtrema(points).all;
 
-    for (const p of Statistics.localExtrema(points).all) {
-      const path = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "path",
-      );
-
-      path.setAttribute("d", `M ${p.x} ${p.y} l 0.001 0`);
-      path.setAttribute("stroke", "#222");
-      path.setAttribute("stroke-width", "5");
-      path.setAttribute("stroke-linecap", "round");
-      path.setAttribute("vector-effect", "non-scaling-stroke");
-
-      g.appendChild(path);
-    }
+    this.drawMarkers();
   }
 
   render() {
@@ -235,23 +264,18 @@ export class Renderer {
   }
 
   async copyPngToClipboard() {
-    const toHide = ["div.cursor", "div.scroll", "rect", "button"];
+    const exlcude = ["div.cursor", "div.scroll", "button"];
 
-    for (const str of toHide) {
-      const el = this.container.querySelector(str) as HTMLElement;
-      if (el) el.style.display = "none";
-    }
-
-    const png = await toPng(this.container);
+    const filter = (el: HTMLElement) => {
+      return !exlcude.some((str) => el instanceof Element && el.matches(str));
+    };
+    this.container.querySelector("rect")!.style.display = "none";
+    const png = await toPng(this.container, { filter, pixelRatio: 4 });
+    this.container.querySelector("rect")!.style.display = "";
 
     const link = document.createElement("a");
     link.download = this.data.fileName.replace(/\.[^/.]+$/, "") + ".png";
     link.href = png;
     link.click();
-
-    for (const str of toHide) {
-      const el = this.container.querySelector(str) as HTMLElement;
-      if (el) el.style.display = "";
-    }
   }
 }

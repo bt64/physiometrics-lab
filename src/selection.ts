@@ -112,5 +112,6 @@ export class Selection {
       "mean amplitude": 0,
     };
     this.updateStatDiv();
+    this.r.drawLocalExtrema([]);
   }
 }
