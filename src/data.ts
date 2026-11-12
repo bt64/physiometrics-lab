@@ -70,10 +70,12 @@ export class Data {
   }
 
   public get min() {
+    if (this.data.length === 0) return 0;
     return Math.min(...this.data);
   }
 
   public get max() {
+    if (this.data.length === 0) return 0;
     return Math.max(...this.data);
   }
 
@@ -126,5 +128,20 @@ export class Data {
     const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
 
     return points.slice(start / interpolation, end / interpolation);
+  }
+
+  public getPointAtTime(time: number) {
+    const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
+    const point = this.points(true)[Math.round(time / interpolation)];
+    return point ? -point.y : null;
+  }
+
+  public formatPoint(point: Point) {
+    let x = point.x / this.samplingRate;
+    if (this.isEvoked) x *= 1000;
+    return {
+      x: this.isEvoked ? x.toFixed(3) : x.toFixed(1),
+      y: point.y.toFixed(2),
+    };
   }
 }

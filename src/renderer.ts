@@ -1,5 +1,6 @@
 import { type Data, type Point } from "./data";
 import { Statistics } from "./statistics";
+import { Selection } from "./selection";
 import { toPng } from "html-to-image";
 
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
@@ -7,16 +8,19 @@ export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 export class Renderer {
   svg = document.querySelector("svg")!;
   container = document.querySelector("div.container") as HTMLDivElement;
-  copyButton = this.container.querySelector("button") as HTMLButtonElement;
+  copyButton = this.container.querySelector("button#copy") as HTMLButtonElement;
   baseW = 0;
   cachedSVGMatrix: DOMMatrix | null = null;
   markers: Point[] = [];
+  selection: Selection;
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
     this.copyButton.addEventListener("click", async () => {
       await this.copyPngToClipboard();
     });
+
+    this.selection = new Selection(this);
   }
 
   svgToScreen(x: number, y: number) {
@@ -64,7 +68,6 @@ export class Renderer {
     viewBox.width = this.baseW * width;
     viewBox.x = this.baseW * x;
     this.drawAxisLabels();
-    // this.drawUnscaledCircle({ x: 100, y: 0 });
     this.drawMarkers();
   }
 
@@ -82,7 +85,7 @@ export class Renderer {
     this.svg.appendChild(line);
   }
 
-  private drawMarkers() {
+  public drawMarkers() {
     const size = 5;
     const color = "#000";
 
@@ -93,8 +96,26 @@ export class Renderer {
     if (markersContainer.childElementCount !== this.markers.length) {
       markersContainer.replaceChildren();
 
-      for (const _ of this.markers) {
-        markersContainer.append(document.createElement("div"));
+      for (const marker of this.markers) {
+        const circle = document.createElement("div");
+        markersContainer.append(circle);
+
+        circle.style.width = size + "px";
+        circle.style.height = size + "px";
+        circle.style.position = "absolute";
+        circle.style.transform = "translate(-50%, -50%)";
+
+        circle.style.borderRadius = "50%";
+        circle.style.background = color;
+
+        // circle.addEventListener("click", () => {
+        //   const idx = this.markers.indexOf(marker);
+        //   console.log("del");
+
+        //   this.markers.splice(idx, 1);
+        //   this.drawMarkers();
+        //   this.selection.calculateStats();
+        // });
       }
     }
 
@@ -106,17 +127,18 @@ export class Renderer {
     for (const [i, marker] of this.markers.entries()) {
       const circle = circles[i];
       const point = this.svgToScreen(marker.x, marker.y);
-      circle.style.position = "absolute";
-      circle.style.width = size + "px";
-      circle.style.height = size + "px";
 
       circle.style.left = `${point.x - containerRect.left}px`;
       circle.style.top = `${point.y - containerRect.top}px`;
-      circle.style.transform = "translate(-50%, -50%)";
 
-      circle.style.borderRadius = "50%";
-      circle.style.background = color;
-      circle.style.pointerEvents = "none";
+      circle.onclick = () => {
+        const idx = this.markers.indexOf(marker);
+        console.log("del");
+
+        this.markers.splice(idx, 1);
+        this.drawMarkers();
+        this.selection.calculateStats();
+      };
     }
 
     this.cachedSVGMatrix = null;
@@ -229,7 +251,7 @@ export class Renderer {
     rect.setAttribute("fill", "#0002");
     rect.setAttribute("vector-effect", "non-scaling-stroke");
 
-    this.svg.appendChild(rect);
+    this.svg.prepend(rect);
   }
 
   drawLocalExtrema(points: Point[]) {

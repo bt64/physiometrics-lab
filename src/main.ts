@@ -4,7 +4,6 @@ import { Data } from "./data";
 import { Scroll } from "./scroll";
 import { Renderer } from "./renderer";
 import { Cursor } from "./cursor";
-import { Selection } from "./selection";
 
 const container = document.querySelector("div.container") as HTMLDivElement;
 const controls = document.querySelector("div.controls") as HTMLDivElement;
@@ -25,7 +24,7 @@ let data = new Data();
 let renderer = new Renderer(data);
 
 const scroll = new Scroll(renderer);
-const selection = new Selection(renderer);
+// const selection = new Selection(renderer);
 new Cursor(renderer);
 
 // Error if no mouse is available (touch devices are not supported)
@@ -44,8 +43,8 @@ const load = async (channel?: number, frame?: number) => {
 
   await data.loadFromFile(file, channel, frame);
   renderer.render();
+  renderer.selection.reset();
   scroll.reset();
-  selection.reset();
 
   container.hidden = false;
   controls.classList.remove("hide");
@@ -91,7 +90,7 @@ interpolationInput.addEventListener("input", () => {
   data.interpolationDegree = interpolationInput.valueAsNumber;
   renderer.render();
   scroll.reset();
-  selection.reset();
+  renderer.selection.reset();
 });
 
 frameInput.addEventListener("input", async () => {

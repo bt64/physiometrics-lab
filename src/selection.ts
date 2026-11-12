@@ -6,8 +6,10 @@ export class Selection {
   end: number = 0;
 
   selecting = false;
+  blocked = false;
   statDiv = document.querySelector("div.stat") as HTMLDivElement;
   copyButton = this.statDiv.querySelector("button") as HTMLButtonElement;
+  clearButton: HTMLButtonElement;
 
   stat = {
     "frequency (Hz)": 0,
@@ -18,7 +20,24 @@ export class Selection {
 
   constructor(private r: Renderer) {
     this.updateStatDiv();
+    this.clearButton = this.r.container.querySelector(
+      "button#clear",
+    ) as HTMLButtonElement;
+
+    this.reset();
+    this.clearButton.addEventListener("click", () => {
+      this.reset();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.reset();
+      }
+    });
+
     this.r.container.addEventListener("pointerdown", (e) => {
+      if (this.blocked) return;
+
       if (e.target === this.r.copyButton) return;
       if (e.clientY < SVG_PADDING.top) return;
       if (e.button !== 0) return;
@@ -38,8 +57,34 @@ export class Selection {
 
       this.end = this.r.screenToSvg(e.clientX, 0).x;
       this.selecting = false;
+      this.clearButton.hidden = false;
+
+      // delay blocking to allow click event to be processed first
+      setTimeout(() => {
+        this.blocked = true;
+      }, 0);
 
       this.calculateSelection();
+    });
+
+    this.r.container.addEventListener("click", (e) => {
+      if (!this.blocked) return;
+      if (e.target !== this.r.container) return;
+      if (e.clientY < SVG_PADDING.top) return;
+
+      let x = Math.round(this.r.screenToSvg(e.clientX, 0).x);
+      let y = this.r.data.getPointAtTime(x);
+
+      if (y === null) return;
+      y = -y;
+
+      if (this.r.markers.some((marker) => marker.x === x && marker.y === y)) {
+        return;
+      }
+
+      this.r.markers.push({ x, y });
+      this.r.drawMarkers();
+      this.calculateStats();
     });
 
     this.copyButton.addEventListener("click", () => {
@@ -58,17 +103,24 @@ export class Selection {
     if (this.end - this.start < this.r.baseW * 0.001) {
       this.start = 0;
       this.end = 0;
+      this.reset();
+      return;
     }
 
     const points = this.r.data.pointsInRange(this.start, this.end);
     this.r.drawSelection(this.start, this.end);
     this.r.drawLocalExtrema(points);
 
-    const { min, max, all } = Statistics.localExtrema(points);
+    this.calculateStats();
+  }
+
+  calculateStats() {
+    const points = this.r.data.pointsInRange(this.start, this.end);
+    const frequency =
+      Statistics.frequency(this.r.markers, this.r.data.samplingRate) / 2;
     const mean = Statistics.mean(points);
     const { range } = Statistics.range(points);
-    const meanAmplitude = Statistics.meanAmplitude(min, max);
-    const frequency = Statistics.frequency(all, this.r.data.samplingRate) / 2;
+    const meanAmplitude = Statistics.meanAmplitude(this.r.markers);
 
     this.stat = {
       "frequency (Hz)": frequency,
@@ -105,6 +157,8 @@ export class Selection {
     this.start = 0;
     this.end = 0;
     this.selecting = false;
+    this.blocked = false;
+    this.clearButton.hidden = true;
     this.stat = {
       "frequency (Hz)": 0,
       mean: 0,
@@ -113,5 +167,6 @@ export class Selection {
     };
     this.updateStatDiv();
     this.r.drawLocalExtrema([]);
+    this.r.drawSelection(0, 0);
   }
 }

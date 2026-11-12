@@ -6,7 +6,7 @@ const border = {
   right: 16,
 };
 
-const minWidth = 24;
+const minWidth = 10;
 
 export class Scroll {
   private readonly scrollh = document.querySelector(
@@ -93,7 +93,7 @@ export class Scroll {
       this.mouseDown = false;
       this.scrollResize = null;
       this.scrollDrag = false;
-      document.body.style.cursor = "crosshair";
+      document.body.style.cursor = "default";
     });
 
     window.addEventListener("wheel", (e) => {

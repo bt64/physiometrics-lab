@@ -63,22 +63,13 @@ export abstract class Statistics {
     return { all: [...min, ...max], min, max };
   }
 
-  /**
-   * Calculates the amplitudes of the signal based on the local minima and maxima.
-   * @param minima An array of local minima points.
-   * @param maxima An array of local maxima points.
-   * @returns An array of amplitudes calculated from the minima and maxima.
-   */
-  public static amplitudes(minima: Point[], maxima: Point[]) {
-    if (minima.length === 0 || maxima.length === 0) return [];
+  public static amplitudes(points: Point[]) {
+    if (points.length === 0) return [];
 
     const amplitudes: number[] = [];
 
-    for (let i = 0; i < Math.min(minima.length, maxima.length); i++) {
-      const min = minima[i];
-      const max = maxima[i];
-
-      amplitudes.push(Math.abs(max.y - min.y));
+    for (let i = 1; i < points.length; i++) {
+      amplitudes.push(Math.abs(points[i - 1].y - points[i].y));
     }
 
     return amplitudes;
@@ -116,7 +107,24 @@ export abstract class Statistics {
    * @param maxima An array of local maxima points.
    * @returns The mean amplitude calculated from the minima and maxima.
    */
-  public static meanAmplitude(minima: Point[], maxima: Point[]) {
-    return Statistics.mean(Statistics.amplitudes(minima, maxima));
+  public static meanAmplitude(points: Point[]) {
+    return Statistics.mean(Statistics.amplitudes(points));
+  }
+
+  public static findClosestPoint(points: Point[], target: Point): Point | null {
+    if (points.length === 0) return null;
+
+    let closestPoint = points[0];
+    let closestDistance = Math.abs(points[0].x - target.x);
+
+    for (const point of points) {
+      const distance = Math.abs(point.x - target.x);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPoint = point;
+      }
+    }
+
+    return closestPoint;
   }
 }

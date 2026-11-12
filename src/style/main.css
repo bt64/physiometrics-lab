@@ -35,10 +35,35 @@ p.error {
   overflow: hidden;
   user-select: none;
 
-  button {
+  .btn {
     position: absolute;
     right: 16px;
     bottom: 36px;
+    z-index: 1;
+  }
+}
+
+svg {
+  pointer-events: none;
+}
+
+.markers div {
+  transition: outline 100ms ease;
+  cursor: pointer;
+  outline: 4px solid #0000;
+
+  &:hover {
+    z-index: 1;
+    outline: 6px solid #0004;
+  }
+
+  /* Extra padding to increase clickable area */
+  &::after {
+    position: absolute;
+    translate: -6px -6px;
+    width: 16px;
+    height: 16px;
+    content: "";
   }
 }
 

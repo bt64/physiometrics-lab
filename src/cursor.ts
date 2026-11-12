@@ -15,7 +15,6 @@ export class Cursor {
       const svgPoint = renderer.screenToSvg(screenX, screenY);
 
       this.cursor.style.left = screenX + "px";
-      this.cursor.style.top = screenY + "px";
 
       let x = svgPoint.x;
       let y = svgPoint.y;
@@ -30,9 +29,12 @@ export class Cursor {
         return;
       }
 
-      const dataPoint = renderer.screenToData(screenX, screenY);
+      const formatted = renderer.data.formatPoint({
+        x,
+        y: renderer.data.getPointAtTime(x) || 0,
+      });
 
-      this.cursor.textContent = `${dataPoint.x}, ${dataPoint.y}`;
+      this.cursor.textContent = `${formatted.x}, ${formatted.y}`;
     });
   }
 }

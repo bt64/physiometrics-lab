@@ -1,9 +1,11 @@
 .cursor {
-  position: fixed;
-  translate: 0 -100%;
-  background-color: #fffc;
+  position: absolute;
+  top: 32px;
+  translate: -0.75px 0;
+  border-left: 1.5px solid #666;
   padding: 4px;
   width: max-content;
+  height: calc(100% - 64px);
   pointer-events: none;
   font-size: 9px;
 
