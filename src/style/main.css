@@ -94,6 +94,23 @@ p.info {
   }
 }
 
+h1 {
+  margin-bottom: 8px;
+  color: #222;
+  font-weight: bold;
+  font-size: 2rem;
+
+  & span {
+    color: #aaa;
+    font-weight: normal;
+    font-size: inherit;
+  }
+}
+
+a {
+  color: #3d3dcd;
+}
+
 :focus-visible {
   outline: 0;
 }

@@ -2,27 +2,25 @@ import { SVG_PADDING, type Renderer } from "./renderer";
 import { Statistics } from "./statistics";
 
 export class Selection {
-  start: number = 0;
-  end: number = 0;
+  private start: number = 0;
+  private end: number = 0;
 
-  selecting = false;
-  blocked = false;
-  statDiv = document.querySelector("div.stat") as HTMLDivElement;
-  copyButton = this.statDiv.querySelector("button") as HTMLButtonElement;
-  clearButton: HTMLButtonElement;
+  private selecting = false;
+  private blocked = false;
+  private statDiv = document.querySelector("div.stat") as HTMLDivElement;
+  private copyButton = this.statDiv.querySelector("button") as HTMLButtonElement;
+  private clearButton: HTMLButtonElement;
 
   stat = {
     "frequency (Hz)": 0,
     mean: 0,
     range: 0,
-    "mean amplitude": 0,
+    tone: 0,
   };
 
   constructor(private r: Renderer) {
     this.updateStatDiv();
-    this.clearButton = this.r.container.querySelector(
-      "button#clear",
-    ) as HTMLButtonElement;
+    this.clearButton = this.r.container.querySelector("button#clear") as HTMLButtonElement;
 
     this.reset();
     this.clearButton.addEventListener("click", () => {
@@ -114,10 +112,9 @@ export class Selection {
     this.calculateStats();
   }
 
-  calculateStats() {
+  public calculateStats() {
     const points = this.r.data.pointsInRange(this.start, this.end);
-    const frequency =
-      Statistics.frequency(this.r.markers, this.r.data.samplingRate) / 2;
+    const frequency = Statistics.frequency(this.r.markers, this.r.data.samplingRate) / 2;
     const mean = Statistics.mean(points);
     const { range } = Statistics.range(points);
     const meanAmplitude = Statistics.meanAmplitude(this.r.markers);
@@ -126,7 +123,7 @@ export class Selection {
       "frequency (Hz)": frequency,
       mean: mean,
       range: range,
-      "mean amplitude": meanAmplitude,
+      tone: meanAmplitude,
     };
     this.updateStatDiv();
   }
@@ -163,7 +160,7 @@ export class Selection {
       "frequency (Hz)": 0,
       mean: 0,
       range: 0,
-      "mean amplitude": 0,
+      tone: 0,
     };
     this.updateStatDiv();
     this.r.drawLocalExtrema([]);

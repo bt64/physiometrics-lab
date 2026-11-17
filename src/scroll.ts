@@ -9,9 +9,7 @@ const border = {
 const minWidth = 10;
 
 export class Scroll {
-  private readonly scrollh = document.querySelector(
-    "div.scroll.h",
-  ) as HTMLDivElement;
+  private readonly scrollh = document.querySelector("div.scroll.h") as HTMLDivElement;
   private width = window.innerWidth - border.left - border.right;
   private mouseDown = false;
   private scrollResize: "left" | "right" | null = null;
@@ -97,6 +95,7 @@ export class Scroll {
     });
 
     window.addEventListener("wheel", (e) => {
+      if (document.querySelector(":popover-open")) return;
       let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       delta *= this.width / (window.innerWidth * 5);
 
@@ -116,7 +115,7 @@ export class Scroll {
     });
   }
 
-  reset() {
+  public reset() {
     this.width = window.innerWidth - border.left - border.right;
     this.scrollLeft = border.left;
     this.scrollRight = border.right;
@@ -127,12 +126,7 @@ export class Scroll {
 
   private setScale() {
     this.renderer.setScale(
-      (this.width +
-        border.left +
-        border.right -
-        this.scrollLeft -
-        this.scrollRight) /
-        this.width,
+      (this.width + border.left + border.right - this.scrollLeft - this.scrollRight) / this.width,
       (this.scrollLeft - border.left) / this.width,
     );
   }

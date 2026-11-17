@@ -1,7 +1,7 @@
 import { type Renderer } from "./renderer";
 
 export class Cursor {
-  cursor: HTMLDivElement;
+  private cursor: HTMLDivElement;
 
   constructor(renderer: Renderer) {
     this.cursor = document.createElement("div");

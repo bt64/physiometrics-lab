@@ -25,9 +25,28 @@
   </div>
 
   <div class="controls hide">
-    <label for="file">LOAD FILE</label>
-    <input type="file" id="file" accept=".anz">
-    <div>
+    <div class="start">
+      <h1>PHYSIOMETRICS LAB</h1>
+    </div>
+
+    <div class="file">
+      <button class="secondary" popovertarget="history-dialog">HISTORY</button>
+      <dialog id="history-dialog" popover>
+        <p>PREVIOUS FILES:</p>
+        <div></div>
+        <button popovertarget="history-dialog" popovertargetaction="close">CLOSE</button>
+      </dialog>
+      <label for="file">LOAD FILE</label>
+      <input type="file" id="file" accept=".anz">
+    </div>
+
+    <div class="start">
+      <p><span>V0.0</span>, Department of Physiology and Neurobiology.</p>
+      <p>Tárnok Bertalan, 2026 <a href="https://github.com/bt64/physiometrics-lab">SOURCE CODE</a></p>
+
+    </div>
+
+    <div class="opt">
       <span>OPT</span>
       <label for="frame">frame:</label>
       <input type="number" id="frame" min="0" value="0">

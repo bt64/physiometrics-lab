@@ -1,18 +1,24 @@
-import { type Data, type Point } from "./data";
+import type { Data, Point } from "./data";
 import { Statistics } from "./statistics";
 import { Selection } from "./selection";
+import { Scroll } from "./scroll";
+import { Cursor } from "./cursor";
 import { toPng } from "html-to-image";
 
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 
 export class Renderer {
-  svg = document.querySelector("svg")!;
-  container = document.querySelector("div.container") as HTMLDivElement;
-  copyButton = this.container.querySelector("button#copy") as HTMLButtonElement;
-  baseW = 0;
-  cachedSVGMatrix: DOMMatrix | null = null;
-  markers: Point[] = [];
-  selection: Selection;
+  public svg = document.querySelector("svg")!;
+  public container = document.querySelector("div.container") as HTMLDivElement;
+  public copyButton = this.container.querySelector("button#copy") as HTMLButtonElement;
+  public baseW = 0;
+  public markers: Point[] = [];
+
+  private cachedSVGMatrix: DOMMatrix | null = null;
+
+  private selection: Selection;
+  private scroll: Scroll;
+  private cursor: Cursor;
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
@@ -21,9 +27,11 @@ export class Renderer {
     });
 
     this.selection = new Selection(this);
+    this.scroll = new Scroll(this);
+    this.cursor = new Cursor(this);
   }
 
-  svgToScreen(x: number, y: number) {
+  public svgToScreen(x: number, y: number) {
     const m = this.cachedSVGMatrix || this.svg.getScreenCTM()!;
     const svgPoint = this.svg.createSVGPoint();
     svgPoint.x = x;
@@ -31,7 +39,7 @@ export class Renderer {
     return svgPoint.matrixTransform(m);
   }
 
-  screenToSvg(x: number, y: number) {
+  public screenToSvg(x: number, y: number) {
     const m = this.cachedSVGMatrix || this.svg.getScreenCTM()!;
     const screenPoint = this.svg.createSVGPoint();
     screenPoint.x = x;
@@ -39,9 +47,9 @@ export class Renderer {
     return screenPoint.matrixTransform(m.inverse());
   }
 
-  screenToData(x: number, y: number, format?: true): { x: string; y: string };
-  screenToData(x: number, y: number, format?: false): { x: number; y: number };
-  screenToData(
+  private screenToData(x: number, y: number, format?: true): { x: string; y: string };
+  private screenToData(x: number, y: number, format?: false): { x: number; y: number };
+  private screenToData(
     x: number,
     y: number,
     format = true,
@@ -60,7 +68,7 @@ export class Renderer {
     return { x, y };
   }
 
-  setScale(width: number, x: number) {
+  public setScale(width: number, x: number) {
     this.svg.style.height = this.container.clientHeight + "px";
 
     const viewBox = this.svg.viewBox.baseVal;
@@ -89,14 +97,12 @@ export class Renderer {
     const size = 5;
     const color = "#000";
 
-    const markersContainer = this.container.querySelector(
-      "div.markers",
-    ) as HTMLDivElement;
+    const markersContainer = this.container.querySelector("div.markers") as HTMLDivElement;
 
     if (markersContainer.childElementCount !== this.markers.length) {
       markersContainer.replaceChildren();
 
-      for (const marker of this.markers) {
+      for (const _ of this.markers) {
         const circle = document.createElement("div");
         markersContainer.append(circle);
 
@@ -107,15 +113,6 @@ export class Renderer {
 
         circle.style.borderRadius = "50%";
         circle.style.background = color;
-
-        // circle.addEventListener("click", () => {
-        //   const idx = this.markers.indexOf(marker);
-        //   console.log("del");
-
-        //   this.markers.splice(idx, 1);
-        //   this.drawMarkers();
-        //   this.selection.calculateStats();
-        // });
       }
     }
 
@@ -145,10 +142,7 @@ export class Renderer {
   }
 
   private drawSignalPlot() {
-    const polyline = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "polyline",
-    );
+    const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
 
     polyline.setAttribute("fill", "none");
     polyline.setAttribute("stroke", "red");
@@ -237,10 +231,9 @@ export class Renderer {
     this.cachedSVGMatrix = null;
   }
 
-  drawSelection(start: number, end: number) {
+  public drawSelection(start: number, end: number) {
     let rect = this.svg.querySelector("rect");
-    if (!rect)
-      rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    if (!rect) rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 
     if (start > end) [start, end] = [end, start];
 
@@ -254,13 +247,13 @@ export class Renderer {
     this.svg.prepend(rect);
   }
 
-  drawLocalExtrema(points: Point[]) {
+  public drawLocalExtrema(points: Point[]) {
     this.markers = Statistics.localExtrema(points).all;
 
     this.drawMarkers();
   }
 
-  render() {
+  public render() {
     this.svg.replaceChildren();
 
     let { absMax } = this.data;
@@ -276,6 +269,9 @@ export class Renderer {
     this.svg.viewBox.baseVal.width = this.baseW;
     this.svg.viewBox.baseVal.height = absMax * 2;
 
+    this.scroll.reset();
+    this.selection.reset();
+
     // need to wait for the next tick to get the correct container size
     Promise.resolve().then(() => {
       this.drawAxisLabels(true);
@@ -285,7 +281,7 @@ export class Renderer {
     });
   }
 
-  async copyPngToClipboard() {
+  private async copyPngToClipboard() {
     const exlcude = ["div.cursor", "div.scroll", "button"];
 
     const filter = (el: HTMLElement) => {
