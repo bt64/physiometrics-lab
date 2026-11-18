@@ -73,6 +73,7 @@ export class Loader {
   }
 
   public async load(file: File, channel?: number, frame?: number) {
+    this.file = file;
     await this.history.addFile(file);
     await this.data.loadFromFile(file, channel, frame);
 

@@ -9,7 +9,7 @@ const border = {
 const minWidth = 10;
 
 export class Scroll {
-  private readonly scrollh = document.querySelector("div.scroll.h") as HTMLDivElement;
+  private readonly scrollh = document.querySelector("div.scroll") as HTMLDivElement;
   private width = window.innerWidth - border.left - border.right;
   private mouseDown = false;
   private scrollResize: "left" | "right" | null = null;

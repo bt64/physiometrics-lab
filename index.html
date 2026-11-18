@@ -16,7 +16,7 @@
     <div class="axis x"></div>
     <div class="axis y"></div>
 
-    <div class="scroll h"></div>
+    <div class="scroll"></div>
     <p class="info"></p>
     <div class="btn">
       <button id="clear">CLEAR SELECTION</button>
@@ -30,11 +30,21 @@
     </div>
 
     <div class="file">
-      <button class="secondary" popovertarget="history-dialog">HISTORY</button>
+      <div>
+        <button class="secondary" popovertarget="history-dialog">HISTORY</button>
+        <button class="secondary" popovertarget="help-dialog">HELP</button>
+      </div>
       <dialog id="history-dialog" popover>
         <p>PREVIOUS FILES:</p>
         <div></div>
         <button popovertarget="history-dialog" popovertargetaction="close">CLOSE</button>
+      </dialog>
+      <dialog id="help-dialog" popover>
+        <p>HELP:</p>
+        <div>
+          <p>This will a show a help page in the future</p>
+        </div>
+        <button popovertarget="help-dialog" popovertargetaction="close">CLOSE</button>
       </dialog>
       <label for="file">LOAD FILE</label>
       <input type="file" id="file" accept=".anz">
