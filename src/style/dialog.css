@@ -20,6 +20,7 @@ dialog div {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-width: 58ch;
   max-height: 75vh;
   overflow-y: auto;
 }
@@ -40,4 +41,12 @@ dialog div button {
 
 dialog::backdrop {
   background-color: #0005;
+}
+
+dialog.error p {
+  color: #d44;
+}
+
+dialog.error div {
+  white-space: pre-wrap;
 }

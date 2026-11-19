@@ -5,7 +5,7 @@
   gap: 24px;
   cursor: default;
   padding: 16px;
-  padding-top: 24px;
+  padding-top: 28px;
   width: 100%;
   height: max-content;
 
@@ -67,12 +67,6 @@
 .stat {
   position: relative;
   align-items: center;
-
-  button {
-    position: absolute;
-    top: -22px;
-    right: 0;
-  }
 }
 
 .opt {
@@ -86,7 +80,7 @@
   grid-template-rows: auto auto auto;
   grid-template-columns: auto;
   grid-auto-flow: column;
-  gap: 4px 16px;
+  gap: 6px 16px;
 
   div {
     display: flex;
@@ -99,13 +93,19 @@
       text-align: right;
     }
   }
+
+  button {
+    position: absolute;
+    top: -26px;
+    right: 0;
+  }
 }
 
 .opt span,
 .stat span,
 .file > span {
   position: absolute;
-  top: -20px;
+  top: -24px;
   color: #aaa;
   font-weight: bold;
   font-size: 12px;

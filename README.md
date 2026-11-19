@@ -23,5 +23,5 @@ bun run build
 ## Contributing
 
 1. Create a branch for your change.
-2. Keep pull requests focused and describe what changed. Make sure all source code and comments are english.
+2. Keep pull requests focused and describe what changed. Make sure all source code and comments are in English.
 3. Open a PR against the default branch and respond to review feedback.

@@ -31,7 +31,7 @@ export class History {
     return new File([buffer], name, { type: "application/octet-stream" });
   }
 
-  public async getHash(file: File) {
+  private async getHash(file: File) {
     const buf = await file.arrayBuffer();
     const hash = await crypto.subtle.digest("SHA-256", buf);
     return this.bufferToHex(hash);
@@ -49,20 +49,15 @@ export class History {
     this.display();
   }
 
-  private getFile(hash: string) {
-    const entry = localStorage.getItem(hash);
-    if (!entry) return null;
-
-    const parsed = JSON.parse(entry);
-    const data = this.base64ToBuffer(parsed.data);
-    const file = new File([data], parsed.name, {
-      type: "application/octet-stream",
-    });
-
-    return file;
+  public async removeFile(file: File) {
+    const hash = await this.getHash(file);
+    this.removeByKey("pml_" + hash);
+    this.display();
   }
 
-  public removeFile() {}
+  private removeByKey(key: string) {
+    localStorage.removeItem(key);
+  }
 
   private getFiles() {
     const entries: HistoryEntry[] = [];
@@ -70,8 +65,20 @@ export class History {
       if (key.startsWith("pml_")) {
         const entry = localStorage.getItem(key);
         if (!entry) continue;
+        try {
+          entries.push(JSON.parse(entry) as HistoryEntry);
+        } catch (e: unknown) {
+          const error = e as SyntaxError;
 
-        entries.push(JSON.parse(entry) as HistoryEntry);
+          // remove any corrupted entries
+          console.log(
+            `Failed to parse history entry [${entry.slice(0, 64)}...]\n${error.message}\nREMOVED FILE`,
+          );
+
+          this.removeByKey(key);
+
+          continue;
+        }
       }
     }
 

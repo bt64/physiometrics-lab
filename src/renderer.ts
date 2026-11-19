@@ -302,11 +302,11 @@ export class Renderer {
   }
 
   private async copyPngToClipboard() {
-    const exlcude = ["div.cursor", "div.scroll", "button"];
+    const exclude = ["div.cursor", "div.scroll", "button"];
     const selection = this.container.querySelector("rect.selection") as SVGRectElement;
 
     const filter = (el: HTMLElement) => {
-      return !exlcude.some((str) => el instanceof Element && el.matches(str));
+      return !exclude.some((str) => el instanceof Element && el.matches(str));
     };
 
     selection.style.display = "none";

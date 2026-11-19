@@ -66,6 +66,14 @@ a {
   color: #46e;
 }
 
+ol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  padding-inline-start: 32px;
+}
+
 p.error {
   place-self: center;
   padding: 16px;

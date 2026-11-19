@@ -43,7 +43,34 @@
       <dialog id="help-dialog" popover>
         <p>HELP:</p>
         <div>
-          <p>This will a show a help page in the future</p>
+          <p><strong>Basic functions:</strong></p>
+          <ol>
+            <li>Load an ".anz" file with the LOAD FILE button</li>
+            <li>Change the view with the scroll bar at the top (resize either end, drag, use the scrollwheel)</li>
+            <li>Create a selection by clicking and dragging on the signal plot</li>
+            <li>Remove unnecessary points by clicking on them</li>
+            <li>Add points by clicking anywhere in the selection</li>
+            <li>To clear the selection click the CLEAR SELECTION button (or press ESC)</li>
+            <li>See the statistics update in real time (bottom of the screen)</li>
+            <li>Copy the current statistics to the clipboard by clicking the COPY TABLE button</li>
+            <li>Save the currently visible plot as an image by clicking the COPY PLOT button</li>
+            <li>Open any previously opened file (on this machine) by clicking the HISTORY button</li>
+          </ol>
+          <p><strong>Options:</strong></p>
+          <ol>
+            <li>interpolation: number of points averaged into each plotted point (increase it to reduce noise)</li>
+            <li>loc.ext radius: radius in which the local extrema are searched (increase it, if multiple nearby points
+              are marked)</li>
+          </ol>
+          <p><strong>Statistics:</strong></p>
+          <ol>
+            <li>cycles: number of point-pairs (number of points / 2)</li>
+            <li>frequency: mean cycle frequency of the selected extrema, in Hz</li>
+            <li>tone: mean absolute difference between consecutive selected extrema</li>
+            <li>std: standard deviation of the selected extrema</li>
+            <li>mean: mean of the selected extrema</li>
+            <li>range: difference between the maximum and minimum selected extrema</li>
+          </ol>
         </div>
         <button popovertarget="help-dialog" popovertargetaction="close">CLOSE</button>
       </dialog>
@@ -73,6 +100,12 @@
       <button disabled>COPY TABLE</button>
     </div>
   </div>
+
+  <dialog id="error-dialog" popover class="error">
+    <p>ERROR:</p>
+    <div></div>
+    <button popovertarget="error-dialog" popovertargetaction="close">CLOSE</button>
+  </dialog>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

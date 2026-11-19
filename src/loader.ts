@@ -1,5 +1,6 @@
 import { clamp } from "./clamp";
 import { Data } from "./data";
+import { ErrorDialog } from "./error-dialog";
 import { History } from "./history";
 import { Renderer } from "./renderer";
 
@@ -74,8 +75,17 @@ export class Loader {
 
   public async load(file: File, frame?: number) {
     this.file = file;
+    try {
+      await this.data.loadFromFile(file, frame);
+    } catch (e) {
+      ErrorDialog.show(
+        `Failed to load file "${file.name}".\nIt may be corrupted or not a valid .anz file.`,
+      );
+      this.history.removeFile(file);
+      return;
+    }
+
     await this.history.addFile(file);
-    await this.data.loadFromFile(file, frame);
 
     this.renderer.render();
 
