@@ -8,17 +8,17 @@ import { toPng } from "html-to-image";
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 
 export class Renderer {
-  public svg = document.querySelector("svg")!;
-  public container = document.querySelector("div.container") as HTMLDivElement;
-  public copyButton = this.container.querySelector("button#copy") as HTMLButtonElement;
+  public readonly svg = document.querySelector("svg")!;
+  public readonly container = document.querySelector("div.container") as HTMLDivElement;
+  public readonly copyButton = this.container.querySelector("button#copy") as HTMLButtonElement;
   public baseW = 0;
   public markers: Point[] = [];
 
   private cachedSVGMatrix: DOMMatrix | null = null;
 
-  private selection: Selection;
-  private scroll: Scroll;
-  private cursor: Cursor;
+  private readonly selection: Selection;
+  private readonly scroll: Scroll;
+  private readonly cursor: Cursor;
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
@@ -130,7 +130,6 @@ export class Renderer {
 
       circle.onclick = () => {
         const idx = this.markers.indexOf(marker);
-        console.log("del");
 
         this.markers.splice(idx, 1);
         this.drawMarkers();
@@ -243,12 +242,32 @@ export class Renderer {
     rect.setAttribute("height", (this.data.absMax * 2 * 1.1).toString());
     rect.setAttribute("fill", "#0002");
     rect.setAttribute("vector-effect", "non-scaling-stroke");
+    rect.classList.add("selection");
 
     this.svg.prepend(rect);
   }
 
   public drawLocalExtrema(points: Point[]) {
     this.markers = Statistics.localExtrema(points).all;
+
+    this.drawMarkers();
+  }
+
+  public drawLocators() {
+    for (const locator of this.data.locators) {
+      const x = this.data.isEvoked ? locator * 1000 : locator;
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+      rect.setAttribute("x", x.toString());
+      rect.setAttribute("y", (-this.data.absMax * 1.1).toString());
+      rect.setAttribute("width", "0.1");
+      rect.setAttribute("height", (this.data.absMax * 2 * 1.1).toString());
+      rect.setAttribute("vector-effect", "non-scaling-stroke");
+      rect.setAttribute("stroke", "#0002");
+      rect.setAttribute("stroke-width", "1.2");
+
+      this.svg.appendChild(rect);
+    }
 
     this.drawMarkers();
   }
@@ -277,19 +296,22 @@ export class Renderer {
       this.drawAxisLabels(true);
       this.drawZeroLine();
       this.drawSignalPlot();
+      this.drawLocators();
       this.setScale(1, 0);
     });
   }
 
   private async copyPngToClipboard() {
     const exlcude = ["div.cursor", "div.scroll", "button"];
+    const selection = this.container.querySelector("rect.selection") as SVGRectElement;
 
     const filter = (el: HTMLElement) => {
       return !exlcude.some((str) => el instanceof Element && el.matches(str));
     };
-    this.container.querySelector("rect")!.style.display = "none";
+
+    selection.style.display = "none";
     const png = await toPng(this.container, { filter, pixelRatio: 4 });
-    this.container.querySelector("rect")!.style.display = "";
+    selection.style.display = "";
 
     const link = document.createElement("a");
     link.download = this.data.fileName.replace(/\.[^/.]+$/, "") + ".png";

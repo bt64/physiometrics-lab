@@ -1,8 +1,8 @@
 .controls {
   display: flex;
-  align-items: end;
+  align-items: start;
   place-self: center;
-  gap: 32px;
+  gap: 24px;
   cursor: default;
   padding: 16px;
   padding-top: 24px;
@@ -49,6 +49,7 @@
 
 .file {
   display: flex;
+  position: relative;
   flex-direction: column;
   gap: 4px;
 
@@ -64,37 +65,33 @@
 
 .opt,
 .stat {
-  display: grid;
   position: relative;
-  grid-template-columns: auto auto;
   align-items: center;
-  gap: 4px 16px;
 
   button {
     position: absolute;
     top: -22px;
     right: 0;
   }
+}
 
-  span {
-    position: absolute;
-    top: -20px;
-    color: #aaa;
-    font-weight: bold;
-    font-size: 12px;
-  }
+.opt {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 0;
 }
 
 .stat {
-  grid-template-rows: auto auto;
+  display: grid;
+  grid-template-rows: auto auto auto;
   grid-template-columns: auto;
   grid-auto-flow: column;
+  gap: 4px 16px;
 
   div {
     display: flex;
     justify-content: space-between;
-    gap: 4px;
-    padding: 4px 0;
+    gap: 8px;
 
     p:nth-child(2) {
       min-width: 6ch;
@@ -102,6 +99,20 @@
       text-align: right;
     }
   }
+}
+
+.opt span,
+.stat span,
+.file > span {
+  position: absolute;
+  top: -20px;
+  color: #aaa;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.controls.hide .file > span {
+  display: none;
 }
 
 input[type="file"] {
@@ -127,15 +138,24 @@ label:has(+ input:disabled) {
   color: #aaa;
 }
 
+label:has(+ input[type="number"]):not([hidden]) {
+  display: flex;
+  align-items: center;
+  background-color: #eee;
+  padding: 4px 8px;
+  padding-right: 8px;
+  height: 100%;
+}
+
 input[type="number"] {
   border: none;
-  background-color: #e2e2e2;
-  padding: 4px;
+  background-color: #eee;
+  padding: 4px 8px;
   width: min-content;
   color: #666;
 
   &:hover {
-    background-color: #d2d2d2;
+    background-color: #ddd;
   }
 
   &:disabled {

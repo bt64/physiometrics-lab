@@ -1,7 +1,7 @@
 import { read } from "mat-for-js";
 
 type FileData = {
-  ch_number: number[];
+  ch_number: number[]; // 1 is the data, 2 is the locators
   evoked_flag: number[];
   record_points: number[];
   record_values: number[][] | number[][][];
@@ -22,13 +22,14 @@ export class Data {
   public samplingRate: number = 0;
   /** Whether the data is evoked or not. */
   public isEvoked: boolean = false;
-  /** The channel number of the data. */
-  public channel: number = 0;
   /** The number of frames in the data. Only used for evoked data. */
   public frameCount = 0;
 
   /** The number of points to average for interpolation. Only used for non-evoked data. */
   public interpolationDegree = 4;
+
+  /** The time values of locators in the data. */
+  public locators: number[] = [];
 
   /**
    * @param frame The frame number to read (0-based). Only used for evoked data.
@@ -38,15 +39,14 @@ export class Data {
   /**
    * @param file The .anz file to read the data from.
    */
-  public async loadFromFile(file: File, channel?: number, frame = 0) {
+  public async loadFromFile(file: File, frame = 0) {
     const buf = await file.arrayBuffer();
     const matData = read<FileData>(buf);
     console.log(matData);
 
-    const chNumber = channel || matData.data.ch_number[0];
     const isEvoked = matData.data.evoked_flag[0] === 1;
     const samplingRate = matData.data.sampling_rate[0];
-    const recordValues = matData.data.record_values[chNumber];
+    const recordValues = matData.data.record_values[1];
     const evokedValues: number[] = [];
 
     if (isEvoked) {
@@ -61,7 +61,16 @@ export class Data {
     this.data = isEvoked ? evokedValues : (recordValues as number[]);
     this.samplingRate = samplingRate;
     this.isEvoked = isEvoked;
-    this.channel = chNumber;
+
+    if (isEvoked) return;
+
+    this.locators = [];
+
+    for (let i = 0; i < matData.data.record_values[2].length; i++) {
+      if (matData.data.record_values[2][i] !== 0) {
+        this.locators.push(i);
+      }
+    }
   }
 
   /** The duration of the signal in ms. */

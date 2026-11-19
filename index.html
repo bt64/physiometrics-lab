@@ -30,6 +30,7 @@
     </div>
 
     <div class="file">
+      <span>FILE</span>
       <div>
         <button class="secondary" popovertarget="history-dialog">HISTORY</button>
         <button class="secondary" popovertarget="help-dialog">HELP</button>
@@ -60,10 +61,11 @@
       <span>OPT</span>
       <label for="frame">frame:</label>
       <input type="number" id="frame" min="0" value="0">
-      <label for="channel">channel:</label>
-      <input type="number" id="channel" min="0" max="2" value="0">
-      <label for="interpolation">interpolation:</label>
-      <input type="number" id="interpolation" min="1" max="8" value="4">
+
+      <label for="interpolation">interpolation</label>
+      <input type="number" id="interpolation" min="1" max="10" value="4">
+      <label for="locextradius">loc.ext radius</label>
+      <input type="number" id="locextradius" min="1" max="16" value="2">
     </div>
 
     <div class="stat">

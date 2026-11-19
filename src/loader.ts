@@ -1,3 +1,4 @@
+import { clamp } from "./clamp";
 import { Data } from "./data";
 import { History } from "./history";
 import { Renderer } from "./renderer";
@@ -8,7 +9,6 @@ export class Loader {
 
   private fileInput = document.querySelector("input#file") as HTMLInputElement;
   private frameInput = document.querySelector("input#frame") as HTMLInputElement;
-  private channelInput = document.querySelector("input#channel") as HTMLInputElement;
   private interpolationInput = document.querySelector("input#interpolation") as HTMLInputElement;
 
   private infoP = document.querySelector("p.info") as HTMLParagraphElement;
@@ -33,20 +33,20 @@ export class Loader {
     });
 
     this.interpolationInput.addEventListener("input", () => {
-      this.data.interpolationDegree = this.interpolationInput.valueAsNumber;
+      let value = this.interpolationInput.valueAsNumber;
+      if (isNaN(value)) value = 1;
+      value = clamp(value, 1, 10);
+      this.data.interpolationDegree = value;
+      this.interpolationInput.value = value.toString();
       this.renderer.render();
     });
 
     this.frameInput.addEventListener("input", async () => {
-      await this.loadCurrentFile(this.channelInput.valueAsNumber, this.frameInput.valueAsNumber);
-    });
-
-    this.channelInput.addEventListener("input", async () => {
-      await this.loadCurrentFile(this.channelInput.valueAsNumber, this.frameInput.valueAsNumber);
+      await this.loadCurrentFile(this.frameInput.valueAsNumber);
     });
   }
 
-  private async loadCurrentFile(channel?: number, frame?: number) {
+  private async loadCurrentFile(frame?: number) {
     if (!this.file) {
       this.controls.classList.add("hide");
       this.container.hidden = true;
@@ -54,7 +54,7 @@ export class Loader {
       return;
     }
 
-    await this.load(this.file, channel, frame);
+    await this.load(this.file, frame);
   }
 
   private displayInfo(file: File) {
@@ -72,19 +72,15 @@ export class Loader {
     this.infoP.innerHTML = `<span>${name}</span> : ${samplingRate}Hz, ${duration}, [${min}V, ${max}V]`;
   }
 
-  public async load(file: File, channel?: number, frame?: number) {
+  public async load(file: File, frame?: number) {
     this.file = file;
     await this.history.addFile(file);
-    await this.data.loadFromFile(file, channel, frame);
+    await this.data.loadFromFile(file, frame);
 
     this.renderer.render();
 
     this.container.hidden = false;
     this.controls.classList.remove("hide");
-
-    if (channel === undefined) {
-      this.channelInput.value = this.data.channel.toString();
-    }
 
     if (frame === undefined) {
       this.frameInput.value = this.data.frame.toString();

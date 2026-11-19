@@ -21,6 +21,20 @@ export abstract class Statistics {
     return sum / values.length;
   }
 
+  public static std(values: Point[] | number[]) {
+    if (values.length === 0) return 0;
+
+    const mean = Statistics.mean(values);
+    let sum = 0;
+
+    for (const value of values) {
+      const yValue = typeof value === "number" ? value : value.y;
+      sum += Math.pow(yValue - mean, 2);
+    }
+
+    return Math.sqrt(sum / values.length);
+  }
+
   /**
    * Calculates the range (min, max, and range) of an array of points.
    * @param points An array of points.

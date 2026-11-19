@@ -12,10 +12,12 @@ export class Selection {
   private clearButton: HTMLButtonElement;
 
   stat = {
+    cycles: 0,
     "frequency (Hz)": 0,
+    tone: 0,
+    std: 0,
     mean: 0,
     range: 0,
-    tone: 0,
   };
 
   constructor(private r: Renderer) {
@@ -57,11 +59,6 @@ export class Selection {
       this.selecting = false;
       this.clearButton.hidden = false;
 
-      // delay blocking to allow click event to be processed first
-      setTimeout(() => {
-        this.blocked = true;
-      }, 0);
-
       this.calculateSelection();
     });
 
@@ -76,7 +73,7 @@ export class Selection {
       if (y === null) return;
       y = -y;
 
-      if (this.r.markers.some((marker) => marker.x === x && marker.y === y)) {
+      if (this.r.markers.some((dot) => dot.x === x && dot.y === y)) {
         return;
       }
 
@@ -105,6 +102,11 @@ export class Selection {
       return;
     }
 
+    // delay blocking to allow click event to be processed first
+    setTimeout(() => {
+      this.blocked = true;
+    }, 0);
+
     const points = this.r.data.pointsInRange(this.start, this.end);
     this.r.drawSelection(this.start, this.end);
     this.r.drawLocalExtrema(points);
@@ -113,18 +115,15 @@ export class Selection {
   }
 
   public calculateStats() {
-    const points = this.r.data.pointsInRange(this.start, this.end);
-    const frequency = Statistics.frequency(this.r.markers, this.r.data.samplingRate) / 2;
-    const mean = Statistics.mean(points);
-    const { range } = Statistics.range(points);
-    const meanAmplitude = Statistics.meanAmplitude(this.r.markers);
-
     this.stat = {
-      "frequency (Hz)": frequency,
-      mean: mean,
-      range: range,
-      tone: meanAmplitude,
+      cycles: this.r.markers.length / 2,
+      "frequency (Hz)": Statistics.frequency(this.r.markers, this.r.data.samplingRate) / 2,
+      tone: Statistics.meanAmplitude(this.r.markers),
+      std: Statistics.std(this.r.markers),
+      mean: Statistics.mean(this.r.markers),
+      range: Statistics.range(this.r.markers).range,
     };
+
     this.updateStatDiv();
   }
 
@@ -135,7 +134,7 @@ export class Selection {
       const p1 = document.createElement("p");
       const p2 = document.createElement("p");
       p1.textContent = key;
-      p2.textContent = value === 0 ? "-" : value.toFixed(3);
+      p2.textContent = value === 0 ? "-" : (Math.round(value * 1000) / 1000).toString();
       div.append(p1, p2);
       this.statDiv.append(div);
     }
@@ -157,10 +156,12 @@ export class Selection {
     this.blocked = false;
     this.clearButton.hidden = true;
     this.stat = {
+      cycles: 0,
       "frequency (Hz)": 0,
+      tone: 0,
+      std: 0,
       mean: 0,
       range: 0,
-      tone: 0,
     };
     this.updateStatDiv();
     this.r.drawLocalExtrema([]);

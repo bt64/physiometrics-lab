@@ -82,6 +82,16 @@ export class History {
     this.container.replaceChildren();
     this.files = this.getFiles();
 
+    if (this.files.length === 0) {
+      const btn = document.createElement("button");
+      const span = document.createElement("span");
+      btn.classList.add("secondary");
+      span.textContent = "No previously loaded files found in history.";
+      btn.appendChild(span);
+      this.container.appendChild(btn);
+      return;
+    }
+
     for (const entry of this.files) {
       const span = document.createElement("span");
       span.textContent = new Date(entry.date).toLocaleString();
