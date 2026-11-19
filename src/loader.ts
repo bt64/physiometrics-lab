@@ -3,6 +3,7 @@ import { Data } from "./data";
 import { ErrorDialog } from "./error-dialog";
 import { History } from "./history";
 import { Renderer } from "./renderer";
+import { Statistics } from "./statistics";
 
 export class Loader {
   private container = document.querySelector("div.container") as HTMLDivElement;
@@ -11,6 +12,7 @@ export class Loader {
   private fileInput = document.querySelector("input#file") as HTMLInputElement;
   private frameInput = document.querySelector("input#frame") as HTMLInputElement;
   private interpolationInput = document.querySelector("input#interpolation") as HTMLInputElement;
+  private locExtRadiusInput = document.querySelector("input#locextradius") as HTMLInputElement;
 
   private infoP = document.querySelector("p.info") as HTMLParagraphElement;
 
@@ -40,6 +42,14 @@ export class Loader {
       this.data.interpolationDegree = value;
       this.interpolationInput.value = value.toString();
       this.renderer.render();
+    });
+
+    this.locExtRadiusInput.addEventListener("input", () => {
+      let value = this.locExtRadiusInput.valueAsNumber;
+      if (isNaN(value)) value = 1;
+      value = clamp(value, 1, 32);
+      this.locExtRadiusInput.value = value.toString();
+      Statistics.localExtremaRadius = value;
     });
 
     this.frameInput.addEventListener("input", async () => {

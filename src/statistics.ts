@@ -1,6 +1,7 @@
 import type { Point } from "./data";
 
 export abstract class Statistics {
+  public static localExtremaRadius = 12;
   /**
    * Calculates the mean of an array of numbers or points.
    * @param values An array of numbers or points.
@@ -54,24 +55,32 @@ export abstract class Statistics {
 
   /**
    * Get the local extrema (minima and maxima) of the signal in the given range.
-   * @param start The start index of the range (inclusive).
-   * @param end The end index of the range (exclusive).
+   * @param points An array of points representing the signal.
+   * @param radius The radius to consider for local extrema. Defaults to 1.
    * @returns An object containing the local minima and maxima points in the given range.
    */
   public static localExtrema(points: Point[]) {
     const min: Point[] = [];
     const max: Point[] = [];
 
-    for (let i = 1; i < points.length - 1; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      const next = points[i + 1];
+    const r = Statistics.localExtremaRadius;
 
-      if (curr.y <= prev.y && curr.y < next.y) {
-        min.push(curr);
-      } else if (curr.y >= prev.y && curr.y > next.y) {
-        max.push(curr);
+    for (let i = r; i < points.length - r; i++) {
+      const curr = points[i];
+      let isMin = true;
+      let isMax = true;
+
+      for (let j = 1; j <= r; j++) {
+        if (curr.y >= points[i - j].y || curr.y > points[i + j].y) {
+          isMin = false;
+        }
+        if (curr.y <= points[i - j].y || curr.y < points[i + j].y) {
+          isMax = false;
+        }
       }
+
+      if (isMin) min.push(curr);
+      if (isMax) max.push(curr);
     }
 
     return { all: [...min, ...max], min, max };
