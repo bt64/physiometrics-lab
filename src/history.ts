@@ -37,34 +37,17 @@ export class History {
     return this.bufferToHex(hash);
   }
 
-  public async addFile(file: File) {
-    const hash = await this.getHash(file);
-    const entry: HistoryEntry = {
-      name: file.name,
-      date: Date.now(),
-      data: this.bufferToBase64(await file.arrayBuffer()),
-    };
-
-    localStorage.setItem("pml_" + hash, JSON.stringify(entry));
-    this.display();
-  }
-
-  public async removeFile(file: File) {
-    const hash = await this.getHash(file);
-    this.removeByKey("pml_" + hash);
-    this.display();
-  }
-
   private removeByKey(key: string) {
     localStorage.removeItem(key);
   }
 
   private getFiles() {
     const entries: HistoryEntry[] = [];
+
     for (const key in localStorage) {
       if (key.startsWith("pml_")) {
-        const entry = localStorage.getItem(key);
-        if (!entry) continue;
+        const entry = localStorage.getItem(key)!;
+
         try {
           entries.push(JSON.parse(entry) as HistoryEntry);
         } catch (e: unknown) {
@@ -85,6 +68,11 @@ export class History {
     return entries.sort((a, b) => b.date - a.date);
   }
 
+  /**
+   * Displays the history of previously loaded files in the history dialog.
+   * Each file is represented by a button that, when clicked, will load the file into the application.
+   * If no files are found in the history, a message is displayed instead.
+   */
   private display() {
     this.container.replaceChildren();
     this.files = this.getFiles();
@@ -117,5 +105,33 @@ export class History {
 
       this.container.appendChild(btn);
     }
+  }
+
+  /**
+   * Adds a file to the history by storing its base64 representation in localStorage.
+   */
+  public async addFile(file: File) {
+    const hash = await this.getHash(file);
+    const entry: HistoryEntry = {
+      name: file.name,
+      date: Date.now(),
+      data: this.bufferToBase64(await file.arrayBuffer()),
+    };
+
+    try {
+      localStorage.setItem("pml_" + hash, JSON.stringify(entry));
+      this.display();
+    } catch (error) {
+      console.warn("Unable to save file history.", error);
+    }
+  }
+
+  /**
+   * Removes a file from the history.
+   */
+  public async removeFile(file: File) {
+    const hash = await this.getHash(file);
+    this.removeByKey("pml_" + hash);
+    this.display();
   }
 }

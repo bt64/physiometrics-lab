@@ -1,4 +1,5 @@
 import { read } from "mat-for-js";
+import { DataHelpers } from "./data-helpers";
 
 type FileData = {
   ch_number: number[]; // 1 is the data, 2 is the locators
@@ -31,6 +32,12 @@ export class Data {
   /** The time values of locators in the data. */
   public locators: number[] = [];
 
+  public min: number = 0;
+  public max: number = 0;
+
+  /** The maximum absolute value of the signal. */
+  public absMax: number = 0;
+
   /**
    * @param frame The frame number to read (0-based). Only used for evoked data.
    */
@@ -42,7 +49,6 @@ export class Data {
   public async loadFromFile(file: File, frame = 0) {
     const buf = await file.arrayBuffer();
     const matData = read<FileData>(buf);
-    console.log(matData);
 
     const isEvoked = matData.data.evoked_flag[0] === 1;
     const samplingRate = matData.data.sampling_rate[0];
@@ -62,7 +68,12 @@ export class Data {
     this.samplingRate = samplingRate;
     this.isEvoked = isEvoked;
 
+    ({ min: this.min, max: this.max } = DataHelpers.range(this.data));
+    this.absMax = Math.max(Math.abs(this.min), Math.abs(this.max));
+
     if (isEvoked) return;
+
+    // Get the locators from the file data
 
     this.locators = [];
 
@@ -76,20 +87,6 @@ export class Data {
   /** The duration of the signal in ms. */
   public get duration() {
     return (this.data.length / this.samplingRate) * 1000;
-  }
-
-  public get min() {
-    if (this.data.length === 0) return 0;
-    return Math.min(...this.data);
-  }
-
-  public get max() {
-    if (this.data.length === 0) return 0;
-    return Math.max(...this.data);
-  }
-
-  public get absMax() {
-    return Math.max(Math.abs(this.min), Math.abs(this.max));
   }
 
   /** Get the interpolated data, which is the average of every `interpolationDegree` points. */

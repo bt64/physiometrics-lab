@@ -1,9 +1,8 @@
-import { clamp } from "./clamp";
 import { Data } from "./data";
+import { DataHelpers } from "./data-helpers";
 import { ErrorDialog } from "./error-dialog";
 import { History } from "./history";
 import { Renderer } from "./renderer";
-import { Statistics } from "./statistics";
 
 export class Loader {
   private container = document.querySelector("div.container") as HTMLDivElement;
@@ -31,14 +30,17 @@ export class Loader {
       this.file = (event.target as HTMLInputElement).files?.[0];
       this.frameInput.value = "0";
       this.interpolationInput.value = "4";
+      this.locExtRadiusInput.value = "12";
       this.data.interpolationDegree = this.interpolationInput.valueAsNumber;
+      this.renderer.selection.statistics.localExtremaRadius = this.locExtRadiusInput.valueAsNumber;
+
       await this.loadCurrentFile();
     });
 
     this.interpolationInput.addEventListener("input", () => {
       let value = this.interpolationInput.valueAsNumber;
-      if (isNaN(value)) value = 1;
-      value = clamp(value, 1, 10);
+      if (Number.isNaN(value)) value = 1;
+      value = DataHelpers.clamp(value, 1, 10);
       this.data.interpolationDegree = value;
       this.interpolationInput.value = value.toString();
       this.renderer.render();
@@ -46,10 +48,10 @@ export class Loader {
 
     this.locExtRadiusInput.addEventListener("input", () => {
       let value = this.locExtRadiusInput.valueAsNumber;
-      if (isNaN(value)) value = 1;
-      value = clamp(value, 1, 32);
+      if (Number.isNaN(value)) value = 1;
+      value = DataHelpers.clamp(value, 1, 32);
+      this.renderer.selection.statistics.localExtremaRadius = value;
       this.locExtRadiusInput.value = value.toString();
-      Statistics.localExtremaRadius = value;
     });
 
     this.frameInput.addEventListener("input", async () => {
@@ -80,11 +82,18 @@ export class Loader {
     const min = this.data.min.toFixed(3);
     const max = this.data.max.toFixed(3);
 
-    this.infoP.innerHTML = `<span>${name}</span> : ${samplingRate}Hz, ${duration}, [${min}V, ${max}V]`;
+    this.infoP.replaceChildren();
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = name;
+
+    this.infoP.textContent = ` : ${samplingRate}Hz, ${duration}, [${min}V, ${max}V]`;
+    this.infoP.prepend(nameSpan);
   }
 
   public async load(file: File, frame?: number) {
     this.file = file;
+
     try {
       await this.data.loadFromFile(file, frame);
     } catch (e) {

@@ -1,9 +1,9 @@
-import type { Data, Point } from "./data";
-import { Statistics } from "./statistics";
+import type { Data } from "./data";
 import { Selection } from "./selection";
 import { Scroll } from "./scroll";
 import { Cursor } from "./cursor";
 import { toPng } from "html-to-image";
+import { ErrorDialog } from "./error-dialog";
 
 export const SVG_PADDING = { top: 32, right: 16, bottom: 32, left: 48 };
 
@@ -12,23 +12,28 @@ export class Renderer {
   public readonly container = document.querySelector("div.container") as HTMLDivElement;
   public readonly copyButton = this.container.querySelector("button#copy") as HTMLButtonElement;
   public baseW = 0;
-  public markers: Point[] = [];
 
   private cachedSVGMatrix: DOMMatrix | null = null;
 
-  private readonly selection: Selection;
+  public readonly selection: Selection;
   private readonly scroll: Scroll;
-  private readonly cursor: Cursor;
 
   constructor(public data: Data) {
     this.svg.style.padding = `${SVG_PADDING.top}px ${SVG_PADDING.right}px ${SVG_PADDING.bottom}px ${SVG_PADDING.left}px`;
     this.copyButton.addEventListener("click", async () => {
-      await this.copyPngToClipboard();
+      try {
+        await this.downloadPng();
+      } catch (error) {
+        ErrorDialog.show("Failed to export the plot.");
+      }
     });
 
     this.selection = new Selection(this);
     this.scroll = new Scroll(this);
-    this.cursor = new Cursor(this);
+    new Cursor(this);
+
+    // has to be called after the selection is created, because it uses the selection to reset the markers
+    this.selection.reset();
   }
 
   public svgToScreen(x: number, y: number) {
@@ -68,17 +73,6 @@ export class Renderer {
     return { x, y };
   }
 
-  public setScale(width: number, x: number) {
-    this.svg.style.height = this.container.clientHeight + "px";
-
-    const viewBox = this.svg.viewBox.baseVal;
-
-    viewBox.width = this.baseW * width;
-    viewBox.x = this.baseW * x;
-    this.drawAxisLabels();
-    this.drawMarkers();
-  }
-
   private drawZeroLine() {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
@@ -93,16 +87,21 @@ export class Renderer {
     this.svg.appendChild(line);
   }
 
+  /**
+   * Draws markers and sets up their event listeners (rendered in HTML instead of SVG to avoid scaling issues).
+   * Must be called in `setScale()` to ensure correct positioning after scaling.
+   */
   public drawMarkers() {
     const size = 5;
     const color = "#000";
 
+    const markers = this.selection.statistics.markers;
     const markersContainer = this.container.querySelector("div.markers") as HTMLDivElement;
 
-    if (markersContainer.childElementCount !== this.markers.length) {
+    if (markersContainer.childElementCount !== markers.length) {
       markersContainer.replaceChildren();
 
-      for (const _ of this.markers) {
+      for (const _ of markers) {
         const circle = document.createElement("div");
         markersContainer.append(circle);
 
@@ -121,20 +120,14 @@ export class Renderer {
     this.cachedSVGMatrix = this.svg.getScreenCTM();
     const containerRect = this.container.getBoundingClientRect();
 
-    for (const [i, marker] of this.markers.entries()) {
+    for (const [i, marker] of markers.entries()) {
       const circle = circles[i];
       const point = this.svgToScreen(marker.x, marker.y);
 
       circle.style.left = `${point.x - containerRect.left}px`;
       circle.style.top = `${point.y - containerRect.top}px`;
 
-      circle.onclick = () => {
-        const idx = this.markers.indexOf(marker);
-
-        this.markers.splice(idx, 1);
-        this.drawMarkers();
-        this.selection.calculateStats();
-      };
+      circle.onclick = () => this.selection.statistics.removeMarker(marker);
     }
 
     this.cachedSVGMatrix = null;
@@ -168,6 +161,7 @@ export class Renderer {
     let yLabelCount = Math.floor(this.container.clientHeight / 60);
     if (yLabelCount % 2 === 0) yLabelCount++;
 
+    // if the number of labels hasn't changed, just update the labels
     if (
       axisX.childElementCount === xLabelCount + 1 &&
       axisY.childElementCount === yLabelCount + 1 &&
@@ -189,6 +183,7 @@ export class Renderer {
     axisY.append(v);
     axisX.append(ms);
 
+    // create the labels
     const p = document.createElement("p");
     p.textContent = "\u00A0";
 
@@ -204,6 +199,10 @@ export class Renderer {
     this.updateAxisLabels();
   }
 
+  /**
+   * Updates the text content of the axis labels based on the current scale and position of the SVG viewBox.
+   * Must be called in `setScale()` to ensure correct values.
+   */
   private updateAxisLabels() {
     const axisX = document.querySelector("div.axis.x")!;
     const axisY = document.querySelector("div.axis.y")!;
@@ -247,12 +246,6 @@ export class Renderer {
     this.svg.prepend(rect);
   }
 
-  public drawLocalExtrema(points: Point[]) {
-    this.markers = Statistics.localExtrema(points).all;
-
-    this.drawMarkers();
-  }
-
   public drawLocators() {
     for (const locator of this.data.locators) {
       const x = this.data.isEvoked ? locator * 1000 : locator;
@@ -268,7 +261,19 @@ export class Renderer {
 
       this.svg.appendChild(rect);
     }
+  }
 
+  /**
+   * Sets the scale of the SVG viewBox based on the provided width and x offset.
+   */
+  public setScale(width: number, x: number) {
+    this.svg.style.height = this.container.clientHeight + "px";
+
+    const viewBox = this.svg.viewBox.baseVal;
+
+    viewBox.width = this.baseW * width;
+    viewBox.x = this.baseW * x;
+    this.drawAxisLabels();
     this.drawMarkers();
   }
 
@@ -301,7 +306,7 @@ export class Renderer {
     });
   }
 
-  private async copyPngToClipboard() {
+  private async downloadPng() {
     const exclude = ["div.cursor", "div.scroll", "button"];
     const selection = this.container.querySelector("rect.selection") as SVGRectElement;
 

@@ -1,4 +1,4 @@
-import { type Renderer } from "./renderer";
+import type { Renderer } from "./renderer";
 
 export class Cursor {
   private cursor: HTMLDivElement;
@@ -8,7 +8,7 @@ export class Cursor {
     this.cursor.classList.add("cursor");
     renderer.container.appendChild(this.cursor);
 
-    addEventListener("mousemove", (e) => {
+    window.addEventListener("mousemove", (e) => {
       const screenX = e.clientX;
       const screenY = e.clientY;
 
@@ -16,8 +16,8 @@ export class Cursor {
 
       this.cursor.style.left = screenX + "px";
 
-      let x = svgPoint.x;
-      let y = svgPoint.y;
+      const x = svgPoint.x;
+      const y = svgPoint.y;
 
       if (
         x < 0 ||

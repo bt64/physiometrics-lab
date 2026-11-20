@@ -1,153 +1,104 @@
 import type { Point } from "./data";
+import { DataHelpers } from "./data-helpers";
+import { ErrorDialog } from "./error-dialog";
+import type { Renderer } from "./renderer";
 
-export abstract class Statistics {
-  public static localExtremaRadius = 12;
-  /**
-   * Calculates the mean of an array of numbers or points.
-   * @param values An array of numbers or points.
-   * @returns The mean of the values.
-   */
-  public static mean(values: Point[] | number[]) {
-    if (values.length === 0) return 0;
+export class Statistics {
+  public localExtremaRadius = 12;
+  public markers: Point[] = [];
 
-    let sum = 0;
-    for (const value of values) {
-      if (typeof value === "number") {
-        sum += value;
-      } else {
-        sum += value.y;
+  private statDiv = document.querySelector("div.stat") as HTMLDivElement;
+  private copyButton = this.statDiv.querySelector("button") as HTMLButtonElement;
+
+  private stat = {
+    cycles: 0,
+    "frequency (Hz)": 0,
+    tone: 0,
+    std: 0,
+    mean: 0,
+    range: 0,
+  };
+
+  constructor(private renderer: Renderer) {
+    this.copyButton.addEventListener("click", () => {
+      try {
+        this.copyToClipboard();
+      } catch (error) {
+        ErrorDialog.show("Failed to export the table.");
       }
-    }
-
-    return sum / values.length;
+    });
   }
 
-  public static std(values: Point[] | number[]) {
-    if (values.length === 0) return 0;
-
-    const mean = Statistics.mean(values);
-    let sum = 0;
-
-    for (const value of values) {
-      const yValue = typeof value === "number" ? value : value.y;
-      sum += Math.pow(yValue - mean, 2);
+  private updateStatDiv() {
+    this.statDiv.querySelectorAll("div")!.forEach((div) => div.remove());
+    for (const [key, value] of Object.entries(this.stat)) {
+      const div = document.createElement("div");
+      const p1 = document.createElement("p");
+      const p2 = document.createElement("p");
+      p1.textContent = key;
+      p2.textContent = value === 0 ? "-" : (Math.round(value * 1000) / 1000).toString();
+      div.append(p1, p2);
+      this.statDiv.append(div);
     }
 
-    return Math.sqrt(sum / values.length);
+    this.copyButton.disabled = Object.values(this.stat).every((v) => v === 0);
   }
 
-  /**
-   * Calculates the range (min, max, and range) of an array of points.
-   * @param points An array of points.
-   * @returns An object containing the min, max, and range of the points.
-   */
-  public static range(points: Point[]) {
-    if (points.length === 0) return { min: 0, max: 0, range: 0 };
-    let min = points[0].y;
-    let max = points[0].y;
-
-    for (const point of points) {
-      if (point.y < min) min = point.y;
-      if (point.y > max) max = point.y;
-    }
-    return { min, max, range: max - min };
+  private copyToClipboard() {
+    const text = Object.entries(this.stat)
+      .map(([key, value]) => `${key}\t${value}`)
+      .join("\n");
+    navigator.clipboard.writeText(text);
   }
 
-  /**
-   * Get the local extrema (minima and maxima) of the signal in the given range.
-   * @param points An array of points representing the signal.
-   * @param radius The radius to consider for local extrema. Defaults to 1.
-   * @returns An object containing the local minima and maxima points in the given range.
-   */
-  public static localExtrema(points: Point[]) {
-    const min: Point[] = [];
-    const max: Point[] = [];
+  public calculateStats() {
+    this.stat = {
+      cycles: this.markers.length / 2,
+      "frequency (Hz)": DataHelpers.frequency(this.markers, this.renderer.data.samplingRate) / 2,
+      tone: DataHelpers.meanAmplitude(this.markers),
+      std: DataHelpers.std(this.markers),
+      mean: DataHelpers.mean(this.markers),
+      range: DataHelpers.range(this.markers).range,
+    };
 
-    const r = Statistics.localExtremaRadius;
-
-    for (let i = r; i < points.length - r; i++) {
-      const curr = points[i];
-      let isMin = true;
-      let isMax = true;
-
-      for (let j = 1; j <= r; j++) {
-        if (curr.y >= points[i - j].y || curr.y > points[i + j].y) {
-          isMin = false;
-        }
-        if (curr.y <= points[i - j].y || curr.y < points[i + j].y) {
-          isMax = false;
-        }
-      }
-
-      if (isMin) min.push(curr);
-      if (isMax) max.push(curr);
-    }
-
-    return { all: [...min, ...max], min, max };
+    this.updateStatDiv();
   }
 
-  public static amplitudes(points: Point[]) {
-    if (points.length === 0) return [];
+  public initRange(start: number, end: number) {
+    const points = this.renderer.data.pointsInRange(start, end);
+    this.markers = DataHelpers.localExtrema(points, this.localExtremaRadius);
+    this.renderer.drawMarkers();
 
-    const amplitudes: number[] = [];
-
-    for (let i = 1; i < points.length; i++) {
-      amplitudes.push(Math.abs(points[i - 1].y - points[i].y));
-    }
-
-    return amplitudes;
+    this.calculateStats();
   }
 
-  /**
-   * Calculates the mean frequency of the points in the given range.
-   * @param points The points of the signal to calculate the frequency from.
-   * @param samplingRate The sampling rate of the signal in Hz.
-   * @returns The mean frequency of the signal in Hz.
-   */
-  public static frequency(points: Point[], samplingRate: number) {
-    if (points.length < 2) return 0;
-
-    let timeDiffSum = 0;
-
-    points.sort((a, b) => a.x - b.x);
-
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-
-      const timeDiff = (curr.x - prev.x) / samplingRate;
-      timeDiffSum += timeDiff;
-    }
-
-    const meanTimeDiff = timeDiffSum / (points.length - 1);
-
-    return 1 / meanTimeDiff;
+  public addMarker(point: Point) {
+    this.markers.push(point);
+    this.renderer.drawMarkers();
+    this.calculateStats();
   }
 
-  /**
-   * Calculates the mean amplitude of the signal based on the local minima and maxima.
-   * @param minima An array of local minima points.
-   * @param maxima An array of local maxima points.
-   * @returns The mean amplitude calculated from the minima and maxima.
-   */
-  public static meanAmplitude(points: Point[]) {
-    return Statistics.mean(Statistics.amplitudes(points));
+  public removeMarker(marker: Point) {
+    const idx = this.markers.indexOf(marker);
+
+    this.markers.splice(idx, 1);
+    this.renderer.drawMarkers();
+    this.calculateStats();
   }
 
-  public static findClosestPoint(points: Point[], target: Point): Point | null {
-    if (points.length === 0) return null;
+  public reset() {
+    this.stat = {
+      cycles: 0,
+      "frequency (Hz)": 0,
+      tone: 0,
+      std: 0,
+      mean: 0,
+      range: 0,
+    };
 
-    let closestPoint = points[0];
-    let closestDistance = Math.abs(points[0].x - target.x);
+    this.markers = [];
+    this.updateStatDiv();
 
-    for (const point of points) {
-      const distance = Math.abs(point.x - target.x);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestPoint = point;
-      }
-    }
-
-    return closestPoint;
+    this.renderer.drawMarkers();
   }
 }
