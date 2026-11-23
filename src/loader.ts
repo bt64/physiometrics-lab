@@ -9,7 +9,6 @@ export class Loader {
   private controls = document.querySelector("div.controls") as HTMLDivElement;
 
   private fileInput = document.querySelector("input#file") as HTMLInputElement;
-  private frameInput = document.querySelector("input#frame") as HTMLInputElement;
   private interpolationInput = document.querySelector("input#interpolation") as HTMLInputElement;
   private locExtRadiusInput = document.querySelector("input#locextradius") as HTMLInputElement;
 
@@ -28,13 +27,14 @@ export class Loader {
 
     this.fileInput.addEventListener("change", async (event) => {
       this.file = (event.target as HTMLInputElement).files?.[0];
-      this.frameInput.value = "0";
       this.interpolationInput.value = "4";
       this.locExtRadiusInput.value = "12";
       this.data.interpolationDegree = this.interpolationInput.valueAsNumber;
       this.renderer.selection.statistics.localExtremaRadius = this.locExtRadiusInput.valueAsNumber;
 
-      await this.loadCurrentFile();
+      if (!this.file) return;
+
+      await this.load(this.file);
     });
 
     this.interpolationInput.addEventListener("input", () => {
@@ -53,25 +53,14 @@ export class Loader {
       this.renderer.selection.statistics.localExtremaRadius = value;
       this.locExtRadiusInput.value = value.toString();
     });
-
-    this.frameInput.addEventListener("input", async () => {
-      await this.loadCurrentFile(this.frameInput.valueAsNumber);
-    });
   }
 
-  private async loadCurrentFile(frame?: number) {
-    if (!this.file) {
-      this.controls.classList.add("hide");
-      this.container.hidden = true;
-
-      return;
-    }
-
-    await this.load(this.file, frame);
-  }
-
-  private displayInfo(file: File) {
-    const name = file.name.length > 20 ? file.name.slice(0, 20) + "..." : file.name;
+  /**
+   * Displays the information about the currently loaded file
+   */
+  private displayInfo() {
+    const name =
+      this.file!.name.length > 20 ? this.file!.name.slice(0, 20) + "..." : this.file!.name;
 
     const duration =
       this.data.duration > 1000
@@ -91,43 +80,37 @@ export class Loader {
     this.infoP.prepend(nameSpan);
   }
 
-  public async load(file: File, frame?: number) {
+  /**
+   * Loads a file into the application, processes its data, and updates the UI accordingly.
+   */
+  public async load(file: File) {
     this.file = file;
 
     try {
-      await this.data.loadFromFile(file, frame);
+      await this.data.loadFromFile(this.file);
     } catch (e) {
       ErrorDialog.show(
-        `Failed to load file "${file.name}".\nIt may be corrupted or not a valid .anz file.`,
+        `Failed to load file "${this.file.name}".\nIt may be corrupted or not a valid .anz file.`,
       );
-      this.history.removeFile(file);
+      this.history.removeFile(this.file);
       return;
     }
 
-    await this.history.addFile(file);
+    await this.history.addFile(this.file);
 
     this.renderer.render();
 
     this.container.hidden = false;
     this.controls.classList.remove("hide");
 
-    if (frame === undefined) {
-      this.frameInput.value = this.data.frame.toString();
-    }
-
     if (this.data.isEvoked) {
-      this.frameInput.max = (this.data.frameCount - 1).toString();
-      this.frameInput.labels![0].hidden = false;
-      this.frameInput.hidden = false;
       this.interpolationInput.hidden = true;
       this.interpolationInput.labels![0].hidden = true;
     } else {
-      this.frameInput.labels![0].hidden = true;
-      this.frameInput.hidden = true;
       this.interpolationInput.hidden = false;
       this.interpolationInput.labels![0].hidden = false;
     }
 
-    this.displayInfo(file);
+    this.displayInfo();
   }
 }

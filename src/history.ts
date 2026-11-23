@@ -51,11 +51,11 @@ export class History {
         try {
           entries.push(JSON.parse(entry) as HistoryEntry);
         } catch (e: unknown) {
-          const error = e as SyntaxError;
+          const msg = (e as SyntaxError).message;
 
           // remove any corrupted entries
           console.log(
-            `Failed to parse history entry [${entry.slice(0, 64)}...]\n${error.message}\nREMOVED FILE`,
+            `Failed to parse history entry [${entry.slice(0, 64)}...]\n${msg}\nREMOVED FILE`,
           );
 
           this.removeByKey(key);

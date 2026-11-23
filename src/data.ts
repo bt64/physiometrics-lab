@@ -23,12 +23,8 @@ export class Data {
   public samplingRate: number = 0;
   /** Whether the data is evoked or not. */
   public isEvoked: boolean = false;
-  /** The number of frames in the data. Only used for evoked data. */
-  public frameCount = 0;
-
   /** The number of points to average for interpolation. Only used for non-evoked data. */
   public interpolationDegree = 4;
-
   /** The time values of locators in the data. */
   public locators: number[] = [];
 
@@ -39,14 +35,9 @@ export class Data {
   public absMax: number = 0;
 
   /**
-   * @param frame The frame number to read (0-based). Only used for evoked data.
-   */
-  constructor(public frame = 0) {}
-
-  /**
    * @param file The .anz file to read the data from.
    */
-  public async loadFromFile(file: File, frame = 0) {
+  public async loadFromFile(file: File) {
     const buf = await file.arrayBuffer();
     const matData = read<FileData>(buf);
 
@@ -56,10 +47,10 @@ export class Data {
     const evokedValues: number[] = [];
 
     if (isEvoked) {
-      this.frameCount = (recordValues as number[][])[0].length;
+      // using frame 0 by default
 
       for (let j = 0; j < recordValues.length; j++) {
-        evokedValues.push((recordValues as number[][])[j][frame]);
+        evokedValues.push((recordValues as number[][])[j][0]);
       }
     }
 
@@ -129,6 +120,10 @@ export class Data {
     return points;
   }
 
+  /**
+   * Get the points in the signal between the given start and end times in ms.
+   * Takes into account the interpolation degree for non-evoked data.
+   */
   public pointsInRange(start: number, end: number) {
     const points = this.points(true);
     const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
@@ -136,6 +131,10 @@ export class Data {
     return points.slice(start / interpolation, end / interpolation);
   }
 
+  /**
+   * Get the point in the signal at the given time in ms.
+   * Takes into account the interpolation degree for non-evoked data.
+   */
   public getPointAtTime(time: number) {
     const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
     const point = this.points(true)[Math.round(time / interpolation)];
