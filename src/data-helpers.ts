@@ -67,6 +67,8 @@ export abstract class DataHelpers {
    * Uses `radius` as the neighborhood size for finding extrema.
    */
   public static localExtrema(points: Point[], radius: number) {
+    if (radius < 1) throw new Error("Radius must be greater than 0.");
+
     const min: Point[] = [];
     const max: Point[] = [];
 
@@ -140,10 +142,7 @@ export abstract class DataHelpers {
   }
 
   /**
-   * Finds the closest point on the x axiy to a target point from an array of points.
-   * @param points An array of points to search through.
-   * @param target The target point to find the closest point to.
-   * @returns The closest point to the target point, or null if the array is empty.
+   * Finds the closest point on the x axis to a target point from an array of points.
    */
   public static findClosestPoint(points: Point[], target: Point) {
     if (points.length === 0) return null;
