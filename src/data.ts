@@ -81,7 +81,6 @@ export class Data {
 
   /** Get the interpolated data, which is the average of every `interpolationDegree` points. */
   public get interpolated() {
-    if (this.isEvoked) return this.data;
     const interpolated: number[] = [];
 
     let a = 0;
@@ -103,10 +102,6 @@ export class Data {
 
   /** Get x and y coordinates of the signal */
   public points(interpolated = true) {
-    if (this.isEvoked) {
-      interpolated = false;
-    }
-
     const points: Point[] = [];
     const data = interpolated ? this.interpolated : this.data;
 

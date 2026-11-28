@@ -96,21 +96,19 @@ export class Loader {
       return;
     }
 
-    await this.history.addFile(this.file);
+    if (this.data.isEvoked) {
+      this.interpolationInput.value = "1";
+      this.data.interpolationDegree = 1;
+      this.locExtRadiusInput.value = "4";
+      this.renderer.selection.statistics.localExtremaRadius = 4;
+    }
 
     this.renderer.render();
 
     this.container.hidden = false;
     this.controls.classList.remove("hide");
 
-    if (this.data.isEvoked) {
-      this.interpolationInput.hidden = true;
-      this.interpolationInput.labels![0].hidden = true;
-    } else {
-      this.interpolationInput.hidden = false;
-      this.interpolationInput.labels![0].hidden = false;
-    }
-
     this.displayInfo();
+    await this.history.addFile(this.file);
   }
 }
