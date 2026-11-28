@@ -19,11 +19,13 @@ export class History {
   }
 
   private bufferToBase64(buffer: ArrayBuffer) {
-    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const bin = [...new Uint8Array(buffer)].map((b) => String.fromCodePoint(b)).join("");
+    return btoa(bin);
   }
 
   private base64ToBuffer(base64: string) {
-    return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)).buffer;
+    const bin = atob(base64);
+    return Uint8Array.from(bin, (c) => c.codePointAt(0)!).buffer;
   }
 
   private base64ToFile(base64: string, name: string) {

@@ -122,7 +122,7 @@ export class Renderer {
 
     for (const [i, marker] of markers.entries()) {
       const circle = circles[i];
-      const point = this.svgToScreen(marker.x, marker.y);
+      const point = this.svgToScreen(marker.x, -marker.y);
 
       circle.style.left = `${point.x - containerRect.left}px`;
       circle.style.top = `${point.y - containerRect.top}px`;
@@ -145,7 +145,7 @@ export class Renderer {
     for (const p of this.data.points()) {
       const point = this.svg.createSVGPoint();
       point.x = p.x;
-      point.y = p.y;
+      point.y = -p.y;
 
       polyline.points.appendItem(point);
     }

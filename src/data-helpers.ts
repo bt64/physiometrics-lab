@@ -99,10 +99,11 @@ export abstract class DataHelpers {
   public static amplitudes(points: Point[]) {
     if (points.length === 0) return [];
 
+    const sorted = points.toSorted((a, b) => a.x - b.x);
     const amplitudes: number[] = [];
 
-    for (let i = 1; i < points.length; i++) {
-      amplitudes.push(Math.abs(points[i - 1].y - points[i].y));
+    for (let i = 1; i < sorted.length; i++) {
+      amplitudes.push(Math.abs(sorted[i - 1].y - sorted[i].y));
     }
 
     return amplitudes;
@@ -110,9 +111,8 @@ export abstract class DataHelpers {
 
   /**
    * Calculates the mean frequency of the points in the given range.
-   * @param points The points of the signal to calculate the frequency from.
-   * @param samplingRate The sampling rate of the signal in Hz.
-   * @returns The mean frequency of the signal in Hz.
+   * One cycle is defined as the time between two consecutive minima or maxima, so the frequency is calculated as half of the mean frequency of the points.
+   * Returns the result in Hertz (Hz)
    */
   public static frequency(points: Point[], samplingRate: number) {
     if (points.length < 2) return 0;
@@ -131,7 +131,7 @@ export abstract class DataHelpers {
 
     const meanTimeDiff = timeDiffSum / (sorted.length - 1);
 
-    return 1 / meanTimeDiff;
+    return 1 / meanTimeDiff / 2; // Divide by 2 to get the frequency of a full cycle (min to max to min)
   }
 
   /**

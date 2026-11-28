@@ -53,11 +53,10 @@ export class Selection {
       if (e.target !== this.renderer.container) return;
       if (e.clientY < SVG_PADDING.top) return;
 
-      let x = Math.round(this.renderer.screenToSvg(e.clientX, 0).x);
-      let y = this.renderer.data.getPointAtTime(x);
+      const x = Math.round(this.renderer.screenToSvg(e.clientX, 0).x);
+      const y = this.renderer.data.getPointAtTime(x);
 
       if (y === null) return;
-      y = -y;
 
       // Check if a marker already exists at this point
       if (this.statistics.markers.some((m) => m.x === x && m.y === y)) {

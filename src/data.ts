@@ -62,12 +62,11 @@ export class Data {
     ({ min: this.min, max: this.max } = DataHelpers.range(this.data));
     this.absMax = Math.max(Math.abs(this.min), Math.abs(this.max));
 
+    this.locators = [];
+
     if (isEvoked) return;
 
     // Get the locators from the file data
-
-    this.locators = [];
-
     for (let i = 0; i < matData.data.record_values[2].length; i++) {
       if (matData.data.record_values[2][i] !== 0) {
         this.locators.push(i);
@@ -102,7 +101,7 @@ export class Data {
     return interpolated;
   }
 
-  /** Get x and y coordinates of the signal for plotting. */
+  /** Get x and y coordinates of the signal */
   public points(interpolated = true) {
     if (this.isEvoked) {
       interpolated = false;
@@ -113,7 +112,7 @@ export class Data {
 
     for (let i = 0; i < data.length; i++) {
       const x = interpolated ? i * this.interpolationDegree : i;
-      const y = -data[i];
+      const y = data[i];
       points.push({ x, y });
     }
 
@@ -137,8 +136,10 @@ export class Data {
    */
   public getPointAtTime(time: number) {
     const interpolation = this.isEvoked ? 1 : this.interpolationDegree;
-    const point = this.points(true)[Math.round(time / interpolation)];
-    return point ? -point.y : null;
+    const index = Math.round(time / interpolation);
+    if (index < 0 || index >= this.points(true).length) return null;
+
+    return this.points(true)[Math.round(time / interpolation)].y;
   }
 
   public formatPoint(point: Point) {

@@ -54,7 +54,7 @@ export class Statistics {
   public calculateStats() {
     this.stat = {
       cycles: this.markers.length / 2,
-      "frequency (Hz)": DataHelpers.frequency(this.markers, this.renderer.data.samplingRate) / 2,
+      "frequency (Hz)": DataHelpers.frequency(this.markers, this.renderer.data.samplingRate),
       tone: DataHelpers.meanAmplitude(this.markers),
       std: DataHelpers.std(this.markers),
       mean: DataHelpers.mean(this.markers),
