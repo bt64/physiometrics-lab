@@ -315,7 +315,7 @@ export class Renderer {
     };
 
     selection.style.display = "none";
-    const png = await toPng(this.container, { filter, pixelRatio: 4 });
+    const png = await toPng(this.container, { filter, pixelRatio: 2 });
     selection.style.display = "";
 
     const link = document.createElement("a");

@@ -53,7 +53,7 @@
   flex-direction: column;
   gap: 4px;
 
-  div {
+  & > div {
     display: flex;
     gap: 4px;
   }

@@ -80,32 +80,47 @@ export class History {
     this.files = this.getFiles();
 
     if (this.files.length === 0) {
-      const btn = document.createElement("button");
+      const div = document.createElement("div");
       const span = document.createElement("span");
-      btn.classList.add("secondary");
+      div.classList.add("secondary");
       span.textContent = "No previously loaded files found in history.";
-      btn.appendChild(span);
-      this.container.appendChild(btn);
+      div.appendChild(span);
+      this.container.appendChild(div);
       return;
     }
 
     for (const entry of this.files) {
+      const div = document.createElement("div");
+
+      const p = document.createElement("p");
+      p.textContent = entry.name;
+
       const span = document.createElement("span");
       span.textContent = new Date(entry.date).toLocaleString();
 
-      const btn = document.createElement("button");
-      btn.textContent = entry.name;
-      btn.classList.add("secondary");
-      btn.popoverTargetElement = document.querySelector("#history-dialog")!;
-      btn.popoverTargetAction = "close";
+      const loadbutton = document.createElement("button");
+      loadbutton.textContent = "LOAD";
+      loadbutton.popoverTargetElement = document.querySelector("#history-dialog")!;
+      loadbutton.popoverTargetAction = "close";
 
-      btn.appendChild(span);
-      btn.addEventListener("click", () => {
+      const removebutton = document.createElement("button");
+      removebutton.textContent = "REMOVE";
+      removebutton.classList.add("secondary");
+
+      loadbutton.addEventListener("click", () => {
         const file = this.base64ToFile(entry.data, entry.name);
         this.loader.load(file);
       });
 
-      this.container.appendChild(btn);
+      removebutton.addEventListener("click", async () => {
+        const file = this.base64ToFile(entry.data, entry.name);
+        await this.removeFile(file);
+        this.display();
+      });
+
+      p.append(span);
+      div.append(p, loadbutton, removebutton);
+      this.container.append(div);
     }
   }
 
